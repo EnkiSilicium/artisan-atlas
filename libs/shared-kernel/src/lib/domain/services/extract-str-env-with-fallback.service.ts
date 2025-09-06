@@ -1,4 +1,4 @@
 export const extractStrEnvWithFallback = (
-  env: any,
+  env: unknown,
   fallback: string,
-): string => (env == null || env === '' ? fallback : env);
+): string => (typeof env === 'string' && env !== '' ? env : fallback);

@@ -8,6 +8,7 @@ import {
   OUTBOX_JOB_PUBLISH,
   OUTBOX_QUEUE,
 } from 'libs/persistence/src/lib/tokens/outbox.tokens';
+import { assertIsObject } from 'shared-kernel';
 import { In, DataSource } from 'typeorm';
 
 interface PublishJobData {
@@ -96,7 +97,10 @@ export class OutboxProcessor extends WorkerHost {
     if (idsToDelete.length === 0) {
       // try extracting ids from events if they carry "outboxId"
       idsToDelete = events
-        .map((e): any => (e as any)?.outboxId)
+        .map((e): unknown => {
+          assertIsObject(e);
+          return e['outboxId'];
+        })
         .filter((v: unknown): v is string => typeof v === 'string');
     }
 
