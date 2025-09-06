@@ -19,7 +19,9 @@ export function makeRegistry<const D extends readonly BaseDescriptor<string>[]>(
   const byCode = Object.freeze(
     defs.reduce(
       (acc, d) => {
-        (acc as any)[d.code] = Object.freeze({ ...d });
+        (acc as Record<string, BaseDescriptor<C>>)[d.code] = Object.freeze({
+          ...d,
+        });
         return acc;
       },
       {} as { [K in C]: BaseDescriptor<K> },
@@ -29,7 +31,7 @@ export function makeRegistry<const D extends readonly BaseDescriptor<string>[]>(
   const codes = Object.freeze(
     defs.reduce(
       (acc, d) => {
-        (acc as any)[d.code] = d.code;
+        (acc as Record<string, C>)[d.code] = d.code;
         return acc;
       },
       {} as { [K in C]: K },

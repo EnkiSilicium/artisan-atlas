@@ -38,11 +38,16 @@ export function requireTxManager(ds: {
   manager: EntityManager;
 }): EntityManager {
   const ambient = getAmbient();
-  assertInsideTransaction({
+
+  const ensure = 'manager'
+  const whenCalledFrom = requireTxManager.name
+
+  assertInsideTransaction(
     ambient,
-    ensure: 'manager',
-    whenCalledFrom: requireTxManager.name,
-  });
+    ensure,
+    whenCalledFrom,
+  );
+
   return ambient.manager;
 }
 
@@ -54,11 +59,16 @@ export function requireTxManager(ds: {
  */
 export function registerBeforeCommit(cb: () => Promise<void> | void) {
   const ambient = getAmbient();
-  assertInsideTransaction({
+
+  const ensure = 'beforeCommit'
+  const whenCalledFrom = registerBeforeCommit.name
+
+
+  assertInsideTransaction(
     ambient,
-    ensure: 'beforeCommit',
-    whenCalledFrom: registerBeforeCommit.name,
-  });
+    ensure,
+    whenCalledFrom,
+  );
   ambient.beforeCommit.push(cb);
 }
 
@@ -70,11 +80,16 @@ export function registerBeforeCommit(cb: () => Promise<void> | void) {
  */
 export function registerAfterCommit(cb: () => Promise<void> | void) {
   const ambient = getAmbient();
-  assertInsideTransaction({
+
+  const ensure = 'afterCommit'
+  const whenCalledFrom = registerAfterCommit.name
+
+  assertInsideTransaction(
     ambient,
-    ensure: 'afterCommit',
-    whenCalledFrom: registerAfterCommit.name,
-  });
+    ensure,
+    whenCalledFrom,
+  );
+
   ambient.afterCommit.push(cb);
 }
 
@@ -90,11 +105,14 @@ export function enqueueOutbox<e extends BaseEvent<string>>(
   message: OutboxMessage<e>,
 ) {
   const ambient = getAmbient();
-  assertInsideTransaction({
+  const ensure = 'outboxBuffer'
+  const whenCalledFrom = enqueueOutbox.name
+
+  assertInsideTransaction(
     ambient,
-    ensure: 'outboxBuffer',
-    whenCalledFrom: enqueueOutbox.name,
-  });
+    ensure,
+    whenCalledFrom,
+  );
   //assertImplementsEntityTechnicals(message.payload);
 
   if (hasTimeMarkers(message.payload)) {

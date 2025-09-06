@@ -7,8 +7,7 @@ import {
 import { assertPositiveInteger } from '../assertions/assert-positive-integer.assertion';
 
 import { assertImplementsEntityTechnicals } from 'libs/persistence/src/lib/assertions/assert-implements-entity-technicals.assertion';
-
-import { isoNow } from 'shared-kernel';
+import { assertIsObject, isoNow } from 'shared-kernel';
 
 import type { DataSource, EntityManager, ObjectType } from 'typeorm';
 
@@ -37,8 +36,9 @@ export async function updateWithVersionGuard<T extends object>(input: {
   const { entityManager, target, currentVersion } = input;
 
   // TypeORM 0.3 uses dataSource; older code sometimes exposes connection
+  assertIsObject(entityManager);
   const ds: DataSource =
-    (entityManager as any)?.dataSource ?? (entityManager as any)?.connection;
+    (entityManager['dataSource'] as DataSource) ?? entityManager['connection'];
   const meta = ds.getMetadata(target);
 
   assertPositiveInteger({
@@ -51,7 +51,10 @@ export async function updateWithVersionGuard<T extends object>(input: {
   const versionProperty = 'version';
 
   // Resolve PK property names
-  const pkProps: string[] = meta.primaryColumns.map((c: any) => c.propertyName);
+  const pkProps: string[] = meta.primaryColumns.map((c: unknown) => {
+    assertIsObject(c);
+    return c['propertyName'] as string;
+  });
   if (pkProps.length === 0) {
     throw new ProgrammerError({
       errorObject: ProgrammerErrorRegistry.byCode.BUG,
@@ -60,11 +63,14 @@ export async function updateWithVersionGuard<T extends object>(input: {
   }
 
   // Build pkWhere from input or from the entity instance
-  const pkWhere: Record<string, unknown> | undefined =
-    (input.pkWhere as Record<string, unknown> | undefined) ??
-    (input.entity
-      ? Object.fromEntries(pkProps.map((p) => [p, (input.entity as any)[p]]))
-      : undefined);
+  let pkWhere: Record<string, unknown> | undefined = input.pkWhere as
+    | Record<string, unknown>
+    | undefined;
+  if (!pkWhere && input.entity) {
+    assertIsObject(input.entity);
+    const entityObj = input.entity as Record<string, unknown>;
+    pkWhere = Object.fromEntries(pkProps.map((p) => [p, entityObj[p]]));
+  }
 
   // Validate pkWhere completeness and values
   if (!pkWhere || typeof pkWhere !== 'object' || Array.isArray(pkWhere)) {
@@ -76,7 +82,7 @@ export async function updateWithVersionGuard<T extends object>(input: {
     });
   }
   for (const pk of pkProps) {
-    const v = (pkWhere)[pk];
+    const v = pkWhere[pk];
     if (v === undefined || v === null) {
       throw new ProgrammerError({
         errorObject: ProgrammerErrorRegistry.byCode.BUG,
@@ -88,7 +94,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
   }
 
   // Prepare SET payload
-  if (!input.set || typeof input.set !== 'object' || Array.isArray(input.set)) {
+  assertIsObject(input.set);
+  if (Array.isArray(input.set)) {
     throw new ProgrammerError({
       errorObject: ProgrammerErrorRegistry.byCode.BUG,
       details: { description: `'set' must be a non-array object` },
@@ -96,7 +103,7 @@ export async function updateWithVersionGuard<T extends object>(input: {
   }
 
   const now = isoNow();
-  const setInput = { ...(input.set as any) };
+  const setInput = { ...(input.set as Record<string, unknown>) };
 
   // Forbid PK updates
   for (const pk of pkProps) {
@@ -110,14 +117,9 @@ export async function updateWithVersionGuard<T extends object>(input: {
     }
   }
 
-  // Scrub accidental version from SET; add lastUpdatedAt only if present on the entity
+  // Scrub accidental version from SET; bump lastUpdatedAt timestamp
   delete setInput[versionProperty];
-  const hasLastUpdated = meta.columns.some(
-    (c: any) => c.propertyName === 'lastUpdatedAt',
-  );
-  if (hasLastUpdated) {
-    setInput['lastUpdatedAt'] = now;
-  }
+  setInput['lastUpdatedAt'] = now;
 
   // Build WHERE: PKs + optimistic guard on current version
   const whereObj = {
@@ -147,8 +149,9 @@ export async function updateWithVersionGuard<T extends object>(input: {
 
   // Bump the in-memory entity if provided
   if (input.entity) {
-    (input.entity)[versionProperty] = currentVersion + 1;
-    if (hasLastUpdated) input.entity['lastUpdatedAt'] = now;
+    assertIsObject(input.entity);
+    input.entity[versionProperty] = currentVersion + 1;
+    input.entity['lastUpdatedAt'] = now;
   }
 
   return currentVersion + 1;

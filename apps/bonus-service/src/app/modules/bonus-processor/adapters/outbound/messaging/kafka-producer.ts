@@ -11,9 +11,10 @@ import { KAFKA_PRODUCER } from 'adapter'; // token bound to ClientKafka
 import { KafkaProducerPort } from 'adapter';
 import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
 import { BonusEventInstanceUnion } from 'contracts';
-import { assertTopicMappingDefined } from '../assertions/assert-topic-mapping-defined.assertion';
+import { assertTopicMappingDefined } from 'adapter';
 import { lastValueFrom } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
+import { assertIsObject } from 'shared-kernel';
 
 @Injectable()
 export class BonusEventDispatcher
@@ -80,17 +81,18 @@ export class BonusEventDispatcher
     return String(topic); // ensure string pattern
   }
 
-  private keyFor(evt: any): string | undefined {
+  private keyFor(evt: unknown): string | undefined {
+    assertIsObject(evt);
     // Tolerate old casings so partitioning doesn't silently degrade
     return (
-      evt.orderId ??
-      evt.orderID ??
-      evt.commissionerId ??
-      evt.commissionerID ??
-      evt.workshopId ??
-      evt.workshopID ??
-      evt.eventId ??
-      evt.eventID ??
+      (evt['orderId'] as string | undefined) ??
+      (evt['orderID'] as string | undefined) ??
+      (evt['commissionerId'] as string | undefined) ??
+      (evt['commissionerID'] as string | undefined) ??
+      (evt['workshopId'] as string | undefined) ??
+      (evt['workshopID'] as string | undefined) ??
+      (evt['eventId'] as string | undefined) ??
+      (evt['eventID'] as string | undefined) ??
       undefined
     );
   }

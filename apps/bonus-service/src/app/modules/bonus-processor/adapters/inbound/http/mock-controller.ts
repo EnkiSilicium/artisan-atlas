@@ -3,9 +3,10 @@ import { getHashId } from "apps/bonus-service/src/app/modules/bonus-processor/ad
 import { BonusEventService } from "apps/bonus-service/src/app/modules/bonus-processor/application/services/bonus-event/bonus-event.service";
 import { HttpErrorInterceptor } from "error-handling/interceptor";
 import { LoggingInterceptor } from "observability";
-import { isoNow } from "shared-kernel";
+import { assertIsObject, isoNow } from "shared-kernel";
 import { http } from "winston";
 import { validator } from 'adapter';
+import { BonusEventName } from "apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/common/bonus-event.registy.js";
 
 @Controller('mock')
 export class MockController {
@@ -15,10 +16,11 @@ export class MockController {
     @UseInterceptors(LoggingInterceptor, HttpErrorInterceptor)
     @Patch()
     @UsePipes(new ValidationPipe(validator))
-    process(@Body() body: { commissionerId: any; eventName: any }) {
+    process(@Body() body: unknown) {
+        assertIsObject(body);
         return this.bonusService.process({
-            commissionerId: body.commissionerId,
-            eventName: body.eventName,
+            commissionerId: body['commissionerId'] as string,
+            eventName: body['eventName'] as BonusEventName,
             eventId: getHashId(body),
             injestedAt: isoNow(),
         });

@@ -11,7 +11,7 @@ export function assertTopicMappingDefined({
   topic,
   eventName,
   known,
-}: AssertTopicMappingDefinedParams): asserts topic {
+}: AssertTopicMappingDefinedParams): void {
   if (!topic) {
     const knownList = known.join(', ');
     throw new ProgrammerError({

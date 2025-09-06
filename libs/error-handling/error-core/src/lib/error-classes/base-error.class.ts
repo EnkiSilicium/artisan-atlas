@@ -32,6 +32,8 @@ export class AppError extends Error {
     this.v = args.errorObject.v;
 
     if (args.details !== undefined) this.details = args.details;
-    if (args.cause !== undefined) (this as any).cause = args.cause;
+    if (args.cause !== undefined) {
+      (this as Record<string, unknown>)['cause'] = args.cause;
+    }
   }
 }
