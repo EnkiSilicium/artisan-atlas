@@ -19,7 +19,7 @@ import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { KafkaProducerPort } from 'adapter';
+import { OutboxService } from 'persistence';
 
 describe('WorkshopInvitationRepo (integration)', () => {
   let moduleRef: TestingModule;
@@ -49,9 +49,9 @@ describe('WorkshopInvitationRepo (integration)', () => {
     });
     await ds.initialize();
 
-    const kafkaMock = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-    } as KafkaProducerPort<any>;
+    const outboxMock = {
+      enqueuePublish: jest.fn().mockResolvedValue(undefined),
+    } as unknown as OutboxService;
 
     moduleRef = await Test.createTestingModule({
       providers: [
@@ -59,12 +59,12 @@ describe('WorkshopInvitationRepo (integration)', () => {
         RequestRepo,
         WorkshopInvitationRepo,
         { provide: DataSource, useValue: ds },
-        { provide: 'KAFKA_PUBLISHER', useValue: kafkaMock },
+        { provide: OutboxService, useValue: outboxMock },
         {
           provide: TypeOrmUoW,
-          useFactory: (dataSource: DataSource, kafka: any) =>
-            new TypeOrmUoW(dataSource, kafka),
-          inject: [DataSource, 'KAFKA_PUBLISHER'],
+          useFactory: (dataSource: DataSource, outbox: OutboxService) =>
+            new TypeOrmUoW(dataSource, outbox),
+          inject: [DataSource, OutboxService],
         },
       ],
     }).compile();
@@ -179,6 +179,53 @@ describe('WorkshopInvitationRepo (integration)', () => {
         expect(found!.budget).toBeNull();
         expect(found!.version).toBe(inv.version);
         expect(inv.version).toBe(2);
+      });
+    });
+
+    it('DB unique constraint prevents accepting more than one workshop for an order', async () => {
+      await inRollbackedTestTx(ds, async () => {
+        // Domain logic already ensures only one invitation can be accepted.
+        // This test bypasses that rule to verify the database constraint directly.
+        const order = makeOrder({ commissionerId: randomUUID(), version: 1 });
+        const req = makeRequest({ orderId: order.orderId, version: 1 });
+        const inv1 = makeWorkshopInvitation({
+          orderId: order.orderId,
+          workshopId: randomUUID(),
+          version: 1,
+        });
+        const inv2 = makeWorkshopInvitation({
+          orderId: order.orderId,
+          workshopId: randomUUID(),
+          version: 1,
+        });
+
+        await uow.run({}, async () => {
+          await orderRepo.insert(order);
+          await requestRepo.insert(req);
+          await repo.insertMany([inv1, inv2]);
+        });
+
+        inv1.accept({
+          description: 'desc1',
+          deadline: new Date().toISOString(),
+          budget: '100',
+        });
+
+        await uow.run({}, async () => {
+          await repo.update(inv1);
+        });
+
+        inv2.accept({
+          description: 'desc2',
+          deadline: new Date().toISOString(),
+          budget: '200',
+        });
+
+        await expect(
+          uow.run({}, async () => {
+            await repo.update(inv2);
+          }),
+        ).rejects.toThrow(InfraError);
       });
     });
 

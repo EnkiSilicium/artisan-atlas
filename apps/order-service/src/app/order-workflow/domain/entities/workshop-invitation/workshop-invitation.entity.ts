@@ -51,6 +51,10 @@ import {
 )
 @Index('ix_workshopInvitation_order_status', ['orderId', 'status'])
 @Index('ix_workshopInvitation_workshop', ['workshopId'])
+@Index('uq_workshopInvitation_order_accepted', ['orderId'], {
+  unique: true,
+  where: `"status" = '${WorkshopInvitationStatus.Accepted}'`,
+})
 @Entity({ name: 'workshop_invitation' })
 export class WorkshopInvitation implements EntityTechnicalsInterface {
   // composite PK: one workshopInvitation per (order, workshop)
