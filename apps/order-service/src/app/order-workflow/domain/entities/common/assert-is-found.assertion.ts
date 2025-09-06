@@ -1,15 +1,15 @@
 import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 
-export function assertIsFound<event extends { name: string }>(
+export function assertIsFound<E extends { name: string }>(
   object: unknown,
-  entity: event,
+  entity: E,
   ids?: {
     orderId?: string;
     commissionerId?: string;
     workshopId?: string;
   },
-): void {
+): asserts object is E {
   if (!object) {
     throw new DomainError({
       errorObject: OrderDomainErrorRegistry.byCode.NOT_FOUND,
