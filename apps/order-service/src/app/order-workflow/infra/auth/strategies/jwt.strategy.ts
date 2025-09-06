@@ -1,7 +1,7 @@
 // apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Principal } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/order-http-jwt.guard';
+import { Principal } from 'auth';
 import { DomainError, ProgrammerError } from 'error-handling/error-core';
 import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';

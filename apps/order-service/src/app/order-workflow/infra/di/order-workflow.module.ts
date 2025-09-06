@@ -51,7 +51,11 @@ import {
 } from 'persistence';
 import { extractBoolEnv } from 'shared-kernel';
 import {AUTH_GUARD} from 'auth'
-import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
+import { RedisModule } from '../../../../infra/redis/redis.module';
+import { RequestControlRepository } from '../../../../infra/request-cooldown/request-control.repository';
+import { RequestCooldownGuard } from '../../../../infra/request-cooldown/request-cooldown.guard';
+import { REQUEST_COOLDOWN_CONFIG } from '../../../../infra/request-cooldown/request-cooldown-config.token';
+import { requestCooldownConfig } from '../../../../infra/config/request-cooldown.config';
 
 @Module({
   imports: [
@@ -100,6 +104,7 @@ import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/i
         orderWorkflowWinstonConfig.transports.consoleTransport,
       ],
     }),
+    RedisModule,
   ],
   controllers: [
     OrderInitController,
@@ -118,6 +123,13 @@ import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/i
     WorkshopInvitationEditService,
     WorkshopInvitationResponseService,
     OrderCancelService,
+
+    RequestControlRepository,
+    RequestCooldownGuard,
+    {
+      provide: REQUEST_COOLDOWN_CONFIG,
+      useValue: requestCooldownConfig(),
+    },
 
     OutboxProcessor,
     OutboxService,
