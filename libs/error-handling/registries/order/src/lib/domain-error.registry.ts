@@ -51,6 +51,14 @@ export const OrderDomainErrorDefs = [
     httpStatus: 403,
     v: 1,
   },
+  {
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Too many requests',
+    service: 'order-service',
+    retryable: true,
+    httpStatus: 429,
+    v: 1,
+  },
 ] as const satisfies readonly BaseDescriptor<string>[];
 
 export const OrderDomainErrorRegistry = makeRegistry(

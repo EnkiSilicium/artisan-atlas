@@ -16,9 +16,7 @@ import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { Request } from 'express';
 
-import { ActorEntityFieldMap, ActorName, ACTOR_NAMES_KEY } from 'auth';
-
-export type Principal = { actorName: ActorName; id: string };
+import { ActorEntityFieldMap, ActorName, Principal, ACTOR_NAMES_KEY } from 'auth';
 
 type AnyPayload = {
   principal?: Principal;
