@@ -22,7 +22,7 @@ import { OrderInitDtoV1, OrderInitPaths } from 'contracts';
 import { validator } from 'adapter';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
 import { ActorName, ActorNames } from 'auth';
-import { RequestCooldownGuard } from '../../../../../infra/request-cooldown/request-cooldown.guard';
+import { RequestCooldownGuard } from '../../../infra/auth/guards/request-cooldown.guard';
 
 @ApiTags('Order workflow')
 @ApiBearerAuth('JWT')

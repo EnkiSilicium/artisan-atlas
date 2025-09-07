@@ -53,10 +53,10 @@ import {
 import { extractBoolEnv } from 'shared-kernel';
 import {AUTH_GUARD} from 'auth'
 import { RedisModule } from '../../../../infra/redis/redis.module';
-import { RequestControlRepository } from '../../../../infra/request-cooldown/request-control.repository';
-import { RequestCooldownGuard } from '../../../../infra/request-cooldown/request-cooldown.guard';
-import { REQUEST_COOLDOWN_CONFIG } from '../../../../infra/request-cooldown/request-cooldown-config.token';
-import { requestCooldownConfig } from '../../../../infra/config/request-cooldown.config';
+import { RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
+import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
+import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
+import { requestCooldownConfig } from '../config/request-cooldown.config';
 
 @Module({
   imports: [
