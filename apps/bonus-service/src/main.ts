@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { bonusProcessorKafkaConfig } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/kafka.config';
+import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
 import { BonusProcessorModule } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/di/bonus-processor.module';
 import { BonusReadModule } from 'apps/bonus-service/src/app/modules/read-projection/infra/di/bonus-read.module';
 import { ApiPaths } from 'contracts';
@@ -13,6 +14,7 @@ import {
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { LoggingInterceptor } from 'observability';
 import { otelSDK } from 'observability';
+import { extractBoolEnv } from 'shared-kernel';
 
 import type { INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
@@ -42,23 +44,27 @@ async function startBonusProcessorApp() {
   //app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.enableShutdownHooks();
   app.setGlobalPrefix(process.env.HTTP_PREFIX ?? ApiPaths.Root);
+  const useRedisMq = extractBoolEnv(process.env.USE_REDIS_MQ);
   app.useGlobalInterceptors(
-    app.get(KafkaErrorInterceptor),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
     app.get(HttpErrorInterceptor),
     app.get(LoggingInterceptor),
   );
 
-  const microservice = app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.KAFKA,
-    options: {
-      client: bonusProcessorKafkaConfig.client,
-      consumer: bonusProcessorKafkaConfig.consumer,
-      producer: bonusProcessorKafkaConfig.producer,
-      run: bonusProcessorKafkaConfig.run,
-    },
-  });
+  const microserviceOptions: MicroserviceOptions = useRedisMq
+    ? { transport: Transport.REDIS, options: redisConfig() }
+    : {
+        transport: Transport.KAFKA,
+        options: {
+          client: bonusProcessorKafkaConfig.client,
+          consumer: bonusProcessorKafkaConfig.consumer,
+          producer: bonusProcessorKafkaConfig.producer,
+          run: bonusProcessorKafkaConfig.run,
+        },
+      };
+  const microservice = app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
   microservice.useGlobalInterceptors(
-    app.get(KafkaErrorInterceptor),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
     app.get(LoggingInterceptor),
   );
 

@@ -20,11 +20,11 @@ import { DataSource } from 'typeorm';
 import { VipProfileRepo } from './vip-profile.repo';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { KafkaProducerPort } from 'adapter';
+import type { MessageProducerPort } from 'adapter';
 
 const kafkaMock = {
   dispatch: jest.fn().mockResolvedValue(undefined),
-} as KafkaProducerPort<any>;
+} as MessageProducerPort<any>;
 
 jest.setTimeout(60_000);
 

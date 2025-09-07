@@ -14,7 +14,7 @@ import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { KafkaProducerPort } from 'adapter';
+import type { MessageProducerPort } from 'adapter';
 
 describe('OrderRepo (integration)', () => {
   let moduleRef: TestingModule;
@@ -44,7 +44,7 @@ describe('OrderRepo (integration)', () => {
 
     const kafkaMock = {
       dispatch: jest.fn().mockResolvedValue(undefined),
-    } as KafkaProducerPort<any>;
+    } as MessageProducerPort<any>;
 
     moduleRef = await Test.createTestingModule({
       providers: [

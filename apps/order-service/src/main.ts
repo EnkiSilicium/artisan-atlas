@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { orderWorkflowKafkaConfig } from 'apps/order-service/src/app/order-workflow/infra/config/kafka.config';
+import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
 import { OrderWorkflowModule } from 'apps/order-service/src/app/order-workflow/infra/di/order-workflow.module';
 import { OrderReadModule } from 'apps/order-service/src/app/read-model/infra/di/order-read.module';
 import { ApiPaths } from 'contracts';
@@ -13,6 +14,7 @@ import {
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { LoggingInterceptor } from 'observability';
 import { otelSDK } from 'observability';
+import { extractBoolEnv } from 'shared-kernel';
 
 import type { INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
@@ -54,21 +56,30 @@ async function startOrderWorkflowApp() {
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.enableShutdownHooks();
   app.setGlobalPrefix(process.env.HTTP_PREFIX ?? ApiPaths.Root);
+  const useRedisMq = extractBoolEnv(process.env.USE_REDIS_MQ);
   app.useGlobalInterceptors(
-    app.get(KafkaErrorInterceptor),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
     app.get(HttpErrorInterceptor),
     app.get(LoggingInterceptor),
   );
 
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.KAFKA,
-    options: {
-      client: orderWorkflowKafkaConfig.client,
-      consumer: orderWorkflowKafkaConfig.consumer,
-      producer: orderWorkflowKafkaConfig.producer,
-      run: orderWorkflowKafkaConfig.run,
-    },
-  });
+  const microserviceOptions: MicroserviceOptions = useRedisMq
+    ? { transport: Transport.REDIS, options: redisConfig() }
+    : {
+        transport: Transport.KAFKA,
+        options: {
+          client: orderWorkflowKafkaConfig.client,
+          consumer: orderWorkflowKafkaConfig.consumer,
+          producer: orderWorkflowKafkaConfig.producer,
+          run: orderWorkflowKafkaConfig.run,
+        },
+      };
+  const microservice = app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
+  if (!useRedisMq) {
+    microservice.useGlobalInterceptors(app.get(KafkaErrorInterceptor), app.get(LoggingInterceptor));
+  } else {
+    microservice.useGlobalInterceptors(app.get(LoggingInterceptor));
+  }
 
   await app.startAllMicroservices();
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { KafkaProducerPort } from 'adapter';
+import { MessageProducerPort } from 'adapter';
 import {
   AllInvitationsDeclinedEventV1,
   AllResponsesReceivedEventV1,
@@ -16,7 +16,7 @@ export class WorkshopInvitationTracker {
 
   constructor(
     private readonly ds: DataSource,
-    private readonly producer: KafkaProducerPort<OrderEventInstanceUnion>,
+    private readonly producer: MessageProducerPort<OrderEventInstanceUnion>,
   ) {}
 
   async initialize(

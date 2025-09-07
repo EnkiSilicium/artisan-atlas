@@ -11,10 +11,7 @@ import { BonusReadRefreshWorker } from 'apps/bonus-service/src/app/modules/read-
 import { BONUS_READ_REFRESH_QUEUE } from 'apps/bonus-service/src/app/modules/read-projection/infra/workers/bonus-read-refresh.token';
 import {
   HttpErrorInterceptor,
-  KafkaErrorInterceptor,
   HttpErrorInterceptorOptions,
-  KafkaErrorInterceptorOptions,
-
 } from 'error-handling/interceptor';
 import { WinstonModule } from 'nest-winston';
 import { OpenTelemetryModule } from 'nestjs-otel';
@@ -52,7 +49,7 @@ import { LoggingInterceptor } from 'observability';
 
     // ClientsModule.register([
     //     {
-    //         name: KAFKA_PRODUCER,
+    //         name: MQ_CLIENT,
     //         transport: Transport.KAFKA,
     //         options: {
     //             client: bonusReadKafkaConfig.client,

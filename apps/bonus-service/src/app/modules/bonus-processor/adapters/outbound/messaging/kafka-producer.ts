@@ -7,8 +7,8 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { KAFKA_PRODUCER } from 'adapter'; // token bound to ClientKafka
-import { KafkaProducerPort } from 'adapter';
+import { MQ_CLIENT } from 'adapter'; // token bound to ClientKafka
+import { MessageProducerPort } from 'adapter';
 import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
 import { BonusEventInstanceUnion } from 'contracts';
 import { ProgrammerError } from 'error-handling/error-core';
@@ -19,13 +19,13 @@ import { defaultIfEmpty } from 'rxjs/operators';
 @Injectable()
 export class BonusEventDispatcher
   implements
-    KafkaProducerPort<BonusEventInstanceUnion>,
+    MessageProducerPort<BonusEventInstanceUnion>,
     OnModuleInit,
     OnModuleDestroy
 {
   private readonly logger = new Logger(BonusEventDispatcher.name);
 
-  constructor(@Inject(KAFKA_PRODUCER) private readonly client: ClientKafka) {}
+  constructor(@Inject(MQ_CLIENT) private readonly client: ClientKafka) {}
 
   async onModuleInit() {
     // ClientKafka needs an explicit connect in app code (Nest won't auto-connect producers)

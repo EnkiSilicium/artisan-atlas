@@ -22,7 +22,7 @@ import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { BaseEvent } from 'contracts';
 import type { OutboxService } from 'persistence';
 
-type KafkaProducerPort<T> = { enqueuePublish(messages: T[]): Promise<void> };
+type MessageProducerPort<T> = { enqueuePublish(messages: T[]): Promise<void> };
 
 // Now the producer publishes BaseEvent payloads, not OutboxMessage rows
 const publishMock: OutboxService = <OutboxService>(<unknown>{

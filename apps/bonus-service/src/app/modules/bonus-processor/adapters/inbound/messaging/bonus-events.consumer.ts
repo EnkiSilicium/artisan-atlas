@@ -1,16 +1,10 @@
 import { createHash } from 'crypto';
 
 import { Controller, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
-import {
-  Ctx,
-  EventPattern,
-  KafkaContext,
-  Payload,
-} from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { BonusEventService } from 'apps/bonus-service/src/app/modules/bonus-processor/application/services/bonus-event/bonus-event.service';
 import { KafkaTopics } from 'contracts';
 import { ProgrammerError } from 'error-handling/error-core';
-import { KafkaErrorInterceptor } from 'error-handling/interceptor';
 import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
 import { LoggingInterceptor } from 'observability';
 import { validator } from 'adapter';
@@ -20,28 +14,22 @@ import { isoNow } from 'shared-kernel';
 export class BonusEventsConsumer {
   constructor(private readonly bonusService: BonusEventService) {}
 
-  @UseInterceptors(KafkaErrorInterceptor, LoggingInterceptor)
+  @UseInterceptors(LoggingInterceptor)
   @EventPattern(KafkaTopics.OrderTransitions)
   @UsePipes(new ValidationPipe(validator))
-  async onOrderTransitions(
-    @Payload() payload: object,
-    @Ctx() ctx: KafkaContext,
-  ) {
+  async onOrderTransitions(@Payload() payload: object) {
     const eventId = getHashId(payload);
-    await this.route({ ...payload, eventId }, ctx);
+    await this.route({ ...payload, eventId });
   }
 
   @EventPattern(KafkaTopics.StageTransitions)
   @UsePipes(new ValidationPipe(validator))
-  async onStageTransitions(
-    @Payload() payload: object,
-    @Ctx() ctx: KafkaContext,
-  ) {
-    await this.route(payload, ctx);
+  async onStageTransitions(@Payload() payload: object) {
+    await this.route(payload);
   }
 
   // If event is invalid, it's detected at the application/domain layer.
-  private async route(event: any, ctx: KafkaContext): Promise<void> {
+  private async route(event: any): Promise<void> {
     const eventId = event?.eventId ?? getHashId(event);
     const commissionerId = event?.commissionerId;
     if (!commissionerId) {
