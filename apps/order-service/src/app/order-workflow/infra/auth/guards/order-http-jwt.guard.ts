@@ -34,6 +34,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
   constructor(
     private readonly orderRepo: OrderRepo,
     private readonly invitationRepo: WorkshopInvitationRepo,
+    private readonly reflector: Reflector
   ) {
     super();
   }
