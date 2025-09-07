@@ -165,7 +165,7 @@ export class OrderHistoryQueryResultFlatDto {
     type: Number,
     nullable: true,
     description: 'Order index of the stage, or null',
-    example: 1,
+    example: 0,
   })
   stageOrder!: number | null;
 
@@ -248,7 +248,7 @@ export class OrderHistoryQueryResultDto {
         invitationCreatedAt: '2023-12-05T00:00:00.000Z',
         invitationLastUpdatedAt: '2023-12-10T00:00:00.000Z',
         stageName: 'Design',
-        stageOrder: 1,
+        stageOrder: 0,
         stageStatus: 'pending',
         approximateLength: '2 weeks',
         needsConfirmation: true,

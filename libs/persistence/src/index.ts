@@ -15,3 +15,4 @@ export * from './lib/transformers/numeric-string-transformer';
 export * from './lib/unit-of-work/typeorm.uow';
 export * from './lib/workers/outbox.worker';
 export * from './lib/write-commands/update-optimistic.write-command';
+export * from './lib/tokens/redis.token';
