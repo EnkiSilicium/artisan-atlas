@@ -16,6 +16,7 @@ import {
 } from 'error-handling/error-core';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { assertIsObject } from 'shared-kernel';
 
 export class HttpErrorInterceptorOptions {
   includeTupleInBody?: boolean;
@@ -57,7 +58,7 @@ export class HttpErrorInterceptor implements NestInterceptor {
         // Unknown → 500 generic body
         if (!isAppError) {
           this.maybeNoStore(res);
-          if ((err as any)?.retryable) {
+          if ((err as unknown as Record<string, unknown>)['retryable']) {
             this.setHeader(
               res,
               'Retry-After',
@@ -102,14 +103,18 @@ export class HttpErrorInterceptor implements NestInterceptor {
     );
   }
 
-  private headersSent(res: any): boolean {
-    return Boolean(res?.headersSent ?? res?.sent);
+  private headersSent(res: unknown): boolean {
+    assertIsObject(res);
+    return Boolean(res['headersSent'] ?? res['sent']);
   }
-  private setHeader(res: any, name: string, value: string) {
-    if (typeof res.setHeader === 'function') return res.setHeader(name, value);
-    if (typeof res.header === 'function') return res.header(name, value);
+  private setHeader(res: unknown, name: string, value: string) {
+    assertIsObject(res);
+    const fn = (res['setHeader'] ?? res['header']) as
+      | ((n: string, v: string) => unknown)
+      | undefined;
+    if (typeof fn === 'function') return fn.call(res, name, value);
   }
-  private maybeNoStore(res: any) {
+  private maybeNoStore(res: unknown) {
     if (!this.opts.addNoStoreHeaders) return;
     this.setHeader(
       res,

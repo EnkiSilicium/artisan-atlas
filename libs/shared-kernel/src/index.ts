@@ -1,3 +1,4 @@
+export * from './lib/domain/assertions/assert-is-object.assertion';
 export * from './lib/domain/assertions/assert-valid-class-validator.assertion';
 export * from './lib/domain/constants/time.constant';
 export * from './lib/domain/services/enum-from-obj.service';

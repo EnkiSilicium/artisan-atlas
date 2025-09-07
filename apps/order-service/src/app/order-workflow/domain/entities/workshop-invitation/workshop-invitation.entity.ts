@@ -16,6 +16,7 @@ import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { EntityTechnicalsInterface, IsoDateTransformer } from 'persistence';
 import { assertValid } from 'shared-kernel';
+import { assertIsObject } from 'shared-kernel';
 import {
   Check,
   Index,
@@ -51,6 +52,10 @@ import {
 )
 @Index('ix_workshopInvitation_order_status', ['orderId', 'status'])
 @Index('ix_workshopInvitation_workshop', ['workshopId'])
+@Index('uq_workshopInvitation_order_accepted', ['orderId'], {
+  unique: true,
+  where: `"status" = '${WorkshopInvitationStatus.Accepted}'`,
+})
 @Entity({ name: 'workshop_invitation' })
 export class WorkshopInvitation implements EntityTechnicalsInterface {
   // composite PK: one workshopInvitation per (order, workshop)
@@ -80,13 +85,19 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
 
   // These are nullable in DB because "pending/declined" must not carry payload.
   // Validators require them only for 'accepted'.
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return o['status'] === WorkshopInvitationStatus.Accepted;
+  })
   @IsString({ groups: [WorkshopInvitationStatus.Accepted, 'description'] })
   @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'description'] })
   @Column('text', { name: 'description', nullable: true })
   description!: string | null;
 
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return o['status'] === WorkshopInvitationStatus.Accepted;
+  })
   //@IsISO8601({}, { groups: [WorkshopInvitationStatus.Accepted, 'deadline'] })
   @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'deadline'] })
   @Column({
@@ -97,7 +108,10 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
   })
   deadline!: string | null;
 
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return o['status'] === WorkshopInvitationStatus.Accepted;
+  })
   @IsString({ groups: [WorkshopInvitationStatus.Accepted, 'budget'] })
   @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'budget'] })
   @Column('varchar', { name: 'budget', length: 64, nullable: true })
