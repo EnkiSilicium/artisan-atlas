@@ -182,53 +182,6 @@ describe('WorkshopInvitationRepo (integration)', () => {
       });
     });
 
-    it('DB unique constraint prevents accepting more than one workshop for an order', async () => {
-      await inRollbackedTestTx(ds, async () => {
-        // Domain logic already ensures only one invitation can be accepted.
-        // This test bypasses that rule to verify the database constraint directly.
-        const order = makeOrder({ commissionerId: randomUUID(), version: 1 });
-        const req = makeRequest({ orderId: order.orderId, version: 1 });
-        const inv1 = makeWorkshopInvitation({
-          orderId: order.orderId,
-          workshopId: randomUUID(),
-          version: 1,
-        });
-        const inv2 = makeWorkshopInvitation({
-          orderId: order.orderId,
-          workshopId: randomUUID(),
-          version: 1,
-        });
-
-        await uow.run({}, async () => {
-          await orderRepo.insert(order);
-          await requestRepo.insert(req);
-          await repo.insertMany([inv1, inv2]);
-        });
-
-        inv1.accept({
-          description: 'desc1',
-          deadline: new Date().toISOString(),
-          budget: '100',
-        });
-
-        await uow.run({}, async () => {
-          await repo.update(inv1);
-        });
-
-        inv2.accept({
-          description: 'desc2',
-          deadline: new Date().toISOString(),
-          budget: '200',
-        });
-
-        await expect(
-          uow.run({}, async () => {
-            await repo.update(inv2);
-          }),
-        ).rejects.toThrow(InfraError);
-      });
-    });
-
     it('optimistic lock: stale update fails', async () => {
       await inRollbackedTestTx(ds, async () => {
         const order = makeOrder({ commissionerId: randomUUID(), version: 1 });

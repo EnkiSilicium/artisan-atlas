@@ -147,6 +147,28 @@ describe('WorkshopInvitation (domain entity)', () => {
     });
   });
 
+  // ---------------- confirm ----------------
+  describe('confirm', () => {
+    it('from Accepted moves to Confirmed', () => {
+      const o = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Accepted,
+      });
+      o.confirm();
+      expect(o.status).toBe(WorkshopInvitationStatus.Confirmed);
+    });
+
+    it('throws if not in Accepted', () => {
+      const p = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Pending,
+      });
+      const d = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Declined,
+      });
+      expect(() => p.confirm()).toThrow();
+      expect(() => d.confirm()).toThrow();
+    });
+  });
+
   // ---------------- decline ----------------
   describe('decline', () => {
     it('from Pending moves to Declined', () => {
@@ -180,7 +202,11 @@ describe('WorkshopInvitation (domain entity)', () => {
       const p = makeWorkshopInvitation({
         status: WorkshopInvitationStatus.Pending,
       });
+      const c = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Confirmed,
+      });
       expect(() => p.editBudget('200')).toThrow();
+      expect(() => c.editBudget('200')).toThrow();
     });
 
     it('rejects empty budget', () => {
@@ -215,7 +241,11 @@ describe('WorkshopInvitation (domain entity)', () => {
       const p = makeWorkshopInvitation({
         status: WorkshopInvitationStatus.Pending,
       });
+      const c = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Confirmed,
+      });
       expect(() => p.editDescription('nope')).toThrow();
+      expect(() => c.editDescription('nope')).toThrow();
     });
 
     it('rejects empty description', () => {
@@ -251,8 +281,12 @@ describe('WorkshopInvitation (domain entity)', () => {
       const p = makeWorkshopInvitation({
         status: WorkshopInvitationStatus.Pending,
       });
+      const c = makeWorkshopInvitation({
+        status: WorkshopInvitationStatus.Confirmed,
+      });
       const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString();
       expect(() => p.editDeadline(nextWeek)).toThrow();
+      expect(() => c.editDeadline(nextWeek)).toThrow();
     });
 
     // it('rejects non-ISO deadline', () => {

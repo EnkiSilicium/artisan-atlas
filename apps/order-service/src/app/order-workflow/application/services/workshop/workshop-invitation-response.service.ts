@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import {
   AcceptWorkshopInvitationCommand,
   DeclineWorkshopInvitationCommand,
+  ConfirmWorkshopInvitationCommand,
 } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.command';
 import { assertIsFound } from 'apps/order-service/src/app/order-workflow/domain/entities/common/assert-is-found.assertion';
 import { Order } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity';
@@ -19,8 +20,10 @@ import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflo
 import {
   WorkshopInvitationAcceptResultDto,
   WorkshopInvitationDeclineResultDto,
+  WorkshopInvitationConfirmResultDto,
   InvitationAcceptedEventV1,
   InvitationDeclinedEventV1,
+  InvitationConfirmedEventV1,
 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
@@ -60,11 +63,9 @@ export class WorkshopInvitationResponseService {
         : new StagesAggregate([stageDefault]);
 
       workshopInvitation.accept(cmd.payload);
-      order.transitionToPendingCompletion();
 
       await this.stagesAggregateRepo.save(stages);
       await this.workshopInvitationsRepo.update(workshopInvitation);
-      await this.orderRepo.update(order);
 
       const eventPayload: InvitationAcceptedEventV1 = {
         commissionerId: order.commissionerId,
@@ -80,6 +81,48 @@ export class WorkshopInvitationResponseService {
         createdAt: isoNow(),
         payload: { ...eventPayload },
       });
+      return { orderId: cmd.orderId, workshopId: cmd.workshopId };
+    });
+  }
+
+  async confirmWorkshopInvitation(
+    cmd: ConfirmWorkshopInvitationCommand,
+  ): Promise<WorkshopInvitationConfirmResultDto> {
+    return this.uow.runWithRetry({}, async () => {
+      const order = cmd.order ?? (await this.orderRepo.findById(cmd.orderId));
+      assertIsFound(order, Order, { orderId: cmd.orderId });
+
+      const workshopInvitation = await this.workshopInvitationsRepo.findById(
+        cmd.orderId,
+        cmd.workshopId,
+      );
+      assertIsFound(workshopInvitation, WorkshopInvitation, {
+        orderId: cmd.orderId,
+        workshopId: cmd.workshopId,
+      });
+
+      workshopInvitation.confirm();
+      order.transitionToPendingCompletion();
+
+      await this.workshopInvitationsRepo.update(workshopInvitation);
+      await this.orderRepo.update(order);
+
+      const eventPayload: InvitationConfirmedEventV1 = {
+        commissionerId: order.commissionerId,
+        eventName: 'InvitationConfirmed',
+        confirmedAt: isoNow(),
+        orderID: order.orderId,
+        aggregateVersion: order.version,
+        schemaV: 1,
+        workshopID: cmd.workshopId,
+      };
+
+      enqueueOutbox({
+        id: randomUUID(),
+        createdAt: isoNow(),
+        payload: { ...eventPayload },
+      });
+
       return { orderId: cmd.orderId, workshopId: cmd.workshopId };
     });
   }

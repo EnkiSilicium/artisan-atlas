@@ -12,6 +12,7 @@ import {
   KafkaTopics,
   OrderCancelDtoV1,
   MarkStageCompletionDtoV1,
+  ConfirmAcceptedInvitationDtoV1,
   OrderHistoryQueryResultDto,
   OrderHistoryQueryResultFlatDto,
   OrderInitDtoV1,
@@ -399,6 +400,15 @@ describe('Order workflow integration (read model + Kafka)', () => {
             intervalMs: 400,
           },
           `Timed out waiting for AllResponsesReceived event for order ${orderId}`,
+        );
+
+        const confirmInvitationUrl = `${CMD}/${ApiPaths.Root}/${WorkshopInvitationResponsePaths.Root}/${WorkshopInvitationResponsePaths.Confirm}`;
+        console.log(
+          `[E2E][HTTP] POST ${confirmInvitationUrl} orderId=${orderId} workshopId=${workshops[0]}`,
+        );
+        await axios.post(
+          confirmInvitationUrl,
+          { orderId, workshopId: workshops[0] } satisfies ConfirmAcceptedInvitationDtoV1,
         );
 
         console.log(`[E2E] Marking & confirming stages...`);
@@ -816,6 +826,15 @@ describe('Order workflow integration (read model + Kafka)', () => {
             },
           ],
         } satisfies AcceptWorkshopInvitationDtoV1);
+
+        const confirmInvitationUrl = `${CMD}/${ApiPaths.Root}/${WorkshopInvitationResponsePaths.Root}/${WorkshopInvitationResponsePaths.Confirm}`;
+        console.log(
+          `[E2E][HTTP] POST ${confirmInvitationUrl} orderId=${orderId} workshopId=${workshops[0]}`,
+        );
+        await axios.post(
+          confirmInvitationUrl,
+          { orderId, workshopId: workshops[0] } satisfies ConfirmAcceptedInvitationDtoV1,
+        );
 
         const before = await readStages(READ, commissionerId);
 

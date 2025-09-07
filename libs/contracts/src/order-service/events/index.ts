@@ -4,6 +4,7 @@ export * from './all-stages-completed.event';
 export * from './cancelled.event';
 export * from './invitation-accepted.event';
 export * from './invitation-declined.event';
+export * from './invitation-confirmed.event';
 export * from './offer-accepted.event';
 export * from './order-cancelled.event';
 export * from './order-completed.event';
