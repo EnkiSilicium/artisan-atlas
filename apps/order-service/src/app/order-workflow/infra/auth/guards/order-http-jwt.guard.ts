@@ -7,6 +7,7 @@ import {
   Logger,
   ForbiddenException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { assertBelongsTo } from 'apps/order-service/src/app/order-workflow/infra/auth/assertions/assert-belongs-to.assertion';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
@@ -14,7 +15,8 @@ import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflo
 import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { Request } from 'express';
-import { ActorEntityFieldMap, ActorName } from 'auth';
+
+import { ActorEntityFieldMap, ActorName, ACTOR_NAMES_KEY } from 'auth';
 
 export type Principal = { actorName: ActorName; id: string };
 
@@ -32,6 +34,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
   constructor(
     private readonly orderRepo: OrderRepo,
     private readonly invitationRepo: WorkshopInvitationRepo,
+    private readonly reflector: Reflector
   ) {
     super();
   }
@@ -61,6 +64,19 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
         throw new DomainError({
           errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,
           details: { description: 'Invalid authenticated principal' },
+        });
+      }
+
+      const allowedActors = this.reflector.get<ActorName[]>(
+        ACTOR_NAMES_KEY,
+        ctx.getHandler(),
+      );
+      if (allowedActors && !allowedActors.includes(user.actorName)) {
+        throw new DomainError({
+          errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,
+          details: {
+            description: `Actor ${user.actorName} not permitted`,
+          },
         });
       }
 
