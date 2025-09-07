@@ -15,9 +15,7 @@ import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { Request } from 'express';
 
-import { ActorEntityFieldMap, ActorName } from 'auth';
-
-export type Principal = { actorName: ActorName; id: string };
+import { ActorEntityFieldMap, ActorName, Principal } from 'auth';
 
 type AnyPayload = {
     principal?: Principal;
