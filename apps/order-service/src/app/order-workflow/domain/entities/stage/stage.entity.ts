@@ -80,7 +80,7 @@ export class StagesAggregate {
       if (!this.stages[i]) {
         throw new DomainError({
           errorObject: OrderDomainErrorRegistry.byCode.VALIDATION,
-          details: { description: `stage missing at order ${i}` },
+          details: { description: `Stage with stageOrder ${i} is expected but missing. Ensure the first stage has order 0 and there are not gaps.` },
         });
       }
     }

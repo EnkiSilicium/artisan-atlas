@@ -80,7 +80,7 @@ export class StagesDataV1 {
   @IsNotEmpty()
   description!: string;
 
-  @ApiProperty({ type: Number, description: 'Order of the stage', example: 1 })
+  @ApiProperty({ type: Number, description: 'Order of the stage', example: 0 })
   @IsNotEmpty()
   @IsNumber()
   stageOrder!: number;

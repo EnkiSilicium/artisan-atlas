@@ -5,6 +5,7 @@ import {
     Inject,
     Injectable,
     Logger,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { assertBelongsTo } from 'apps/order-service/src/app/order-workflow/infra/auth/assertions/assert-belongs-to.assertion';
@@ -36,6 +37,54 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
     ) {
         super();
     }
+
+
+
+    handleRequest(err: any, user: any, info: any, ctx: ExecutionContext, status?: number) {
+        const req = ctx.switchToHttp().getRequest();
+
+        // Minimal, redacted request context
+        const hdr = String(req.headers['authorization'] ?? '').slice(0, 32) + '…';
+        Logger.verbose({
+            msg: 'Auth decision',
+            userPresent: !!user,
+            err: err?.message ?? null,
+            info: typeof info === 'string' ? info : info?.message ?? null,
+            status,
+            method: req.method,
+            url: req.originalUrl ?? req.url,
+            authHeaderPrefix: hdr.startsWith('Bearer') ? 'Bearer …' : 'absent-or-wrong',
+        });
+
+        if (err || !user) {
+            // Attach passport's info so you actually see why it failed
+            throw new UnauthorizedException({
+                reason: err?.message ?? info?.message ?? 'unauthorized',
+                code: info?.name ?? 'AUTH_FAILED',
+                hint: this.hintFromInfo(info),
+            });
+        }
+        return user;
+    }
+
+    private hintFromInfo(info: any): string | undefined {
+        const m = typeof info === 'string' ? info : info?.message;
+        if (!m) return undefined;
+        if (/No auth token/i.test(m)) return 'Missing Authorization: Bearer <token>';
+        if (/invalid signature/i.test(m)) return 'JWT secret/alg mismatch';
+        if (/jwt expired/i.test(m)) return 'Token expired';
+        if (/audience invalid/i.test(m)) return 'audience mismatch';
+        if (/issuer invalid/i.test(m)) return 'issuer mismatch';
+        return m;
+    }
+
+
+
+
+
+
+
+
 
     async canActivate(ctx: ExecutionContext): Promise<boolean> {
         Logger.debug({ message: `${OrderHttpJwtGuard.name} active` });
@@ -90,7 +139,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
         }
 
         switch (body.principal.actorName) {
-        
+
             case ActorName.Commissioner: {
                 const order = await this.orderRepo.findById(orderId);
 
@@ -105,7 +154,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
                 return true;
             }
 
-           
+
             case ActorName.Workshop: {
                 const workshopId = body.workshopId ?? body.principal.id;
 
@@ -135,7 +184,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
                 return true;
             }
 
-         
+
             default:
                 throw new DomainError({
                     errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,

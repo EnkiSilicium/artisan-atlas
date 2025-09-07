@@ -1,5 +1,5 @@
 // apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Principal } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/order-http-jwt.guard';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -10,6 +10,7 @@ import { assertValidJwtPayload } from '../assertions/assert-valid-jwt-payload.as
 import { assertJwtKeyDefined } from '../assertions/assert-jwt-key-defined.assertion';
 
 import { ActorName } from 'auth';
+import { inspect } from 'util';
 
 
 
@@ -29,15 +30,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: extractKey([process.env.JWT_PUBLIC_KEY]),
+      secretOrKey: extractKey([process.env.JWT_PUBLIC_KEY]).replace(/\\n/g, '\n'),
       algorithms: ['RS256'],
+      passReqToCallback: true,
       audience: process.env.JWT_AUD ?? undefined,
       issuer: process.env.JWT_ISS ?? undefined,
     });
   }
 
   // Return value becomes req.user
-  async validate(payload: JwtPayload): Promise<Principal> {
+  async validate(req: any, payload: JwtPayload): Promise<Principal> {
+
     // Minimal sanity
     assertValidJwtPayload(payload);
 
