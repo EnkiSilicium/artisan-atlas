@@ -19,6 +19,16 @@
         }
       }
     },
+
+    "bundle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=development", "--config", "./webpack.bundle.config.js"],
+        "cwd": "apps/order-service",
+        "target": "node"
+      }
+    },
     "prune-lockfile": {
       "dependsOn": ["build"],
       "cache": true,
@@ -80,8 +90,5 @@
         "cwd": "."
       }
     }
-
-
-    
   }
 }
