@@ -12,6 +12,8 @@ export * from './dtos/workshop-invitation-accept-result.dto';
 export * from './dtos/workshop-invitation-accept.dto';
 export * from './dtos/workshop-invitation-decline-result.dto';
 export * from './dtos/workshop-invitation-decline.dto';
+export * from './dtos/workshop-invitation-confirm-result.dto';
+export * from './dtos/workshop-invitation-confirm.dto';
 export * from './events/all-invitations-declined.event';
 export * from './events/all-responses-received.event';
 export * from './events/all-stages-completed.event';

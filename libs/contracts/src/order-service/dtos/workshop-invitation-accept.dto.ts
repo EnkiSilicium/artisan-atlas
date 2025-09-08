@@ -133,7 +133,7 @@ export class AcceptWorkshopInvitationDtoV1 {
         approximateLength: '2 weeks',
         needsConfirmation: true,
         description: 'Initial design work',
-        stageOrder: 1,
+        stageOrder: 0,
       },
     ],
   })

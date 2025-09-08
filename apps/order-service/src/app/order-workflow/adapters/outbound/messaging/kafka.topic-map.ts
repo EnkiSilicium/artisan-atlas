@@ -19,4 +19,5 @@ export const OrderServiceTopicMap: Record<
   StageConfirmed: KafkaTopics.StageTransitions,
   OrderCancelled: KafkaTopics.OrderTransitions,
   OrderMarkedAsCompleted: KafkaTopics.OrderTransitions,
+  InvitationConfirmed: KafkaTopics.OrderTransitions
 } as const;
