@@ -88,7 +88,7 @@ module.exports = async function () {
     );
   }
 
-  await new Promise((r) => setTimeout(r, 8000))
+  await new Promise((r) => setTimeout(r, 15_000))
 
   // Spawn app with the correct env 
   const app = spawn('node', [entry], {

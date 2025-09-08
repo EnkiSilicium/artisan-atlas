@@ -18,3 +18,9 @@ export type DeclineWorkshopInvitationCommand = {
   workshopId: string;
   order?: Order;
 };
+
+export type ConfirmWorkshopInvitationCommand = {
+  orderId: string;
+  workshopId: string;
+  order?: Order;
+};

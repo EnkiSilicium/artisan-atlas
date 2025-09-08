@@ -80,7 +80,7 @@ export class StagesDataV1 {
   @IsNotEmpty()
   description!: string;
 
-  @ApiProperty({ type: Number, description: 'Order of the stage', example: 1 })
+  @ApiProperty({ type: Number, description: 'Order of the stage', example: 0 })
   @IsNotEmpty()
   @IsNumber()
   stageOrder!: number;
@@ -133,7 +133,7 @@ export class AcceptWorkshopInvitationDtoV1 {
         approximateLength: '2 weeks',
         needsConfirmation: true,
         description: 'Initial design work',
-        stageOrder: 1,
+        stageOrder: 0,
       },
     ],
   })
