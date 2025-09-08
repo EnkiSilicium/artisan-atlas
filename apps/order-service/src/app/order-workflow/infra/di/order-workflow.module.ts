@@ -57,6 +57,7 @@ import { RequestControlRepository } from '../auth/request-cooldown/request-contr
 import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
 import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
 import { requestCooldownConfig } from '../config/request-cooldown.config';
+import { redisConfig } from 'apps/order-service/src/infra/config/redis.config.js';
 
 @Module({
   imports: [
