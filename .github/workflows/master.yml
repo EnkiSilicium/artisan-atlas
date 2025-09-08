@@ -90,7 +90,7 @@ jobs:
           fi
 
 
-      - name: Unit tests (affected on PR; all on main)
+      - name: Integrational (repo) tests (affected on PR; all on main)
         shell: bash
         run: |
           set -euo pipefail

@@ -1,5 +1,5 @@
 // apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Principal } from 'auth';
 import { DomainError, ProgrammerError } from 'error-handling/error-core';
@@ -7,7 +7,14 @@ import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+
+
+import { assertValidJwtPayload } from '../assertions/assert-valid-jwt-payload.assertion';
+import { assertJwtKeyDefined } from '../assertions/assert-jwt-key-defined.assertion';
+
 import { ActorName } from 'auth';
+import { inspect } from 'util';
+
 
 
 // Shape of the JWT payload you mint upstream
@@ -26,26 +33,19 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: extractKey([process.env.JWT_PUBLIC_KEY]),
+      secretOrKey: extractKey([process.env.JWT_PUBLIC_KEY]).replace(/\\n/g, '\n'),
       algorithms: ['RS256'],
+      passReqToCallback: true,
       audience: process.env.JWT_AUD ?? undefined,
       issuer: process.env.JWT_ISS ?? undefined,
     });
   }
 
   // Return value becomes req.user
-  async validate(payload: JwtPayload): Promise<Principal> {
+  async validate(req: any, payload: JwtPayload): Promise<Principal> {
+
     // Minimal sanity
-    if (!payload?.sub || !payload?.actorName) {
-      throw new DomainError({
-        errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,
-        details: {
-          message: "Incorrect JWT shape - no 'sub' or 'actorName",
-          sub: payload?.sub,
-          actorName: payload?.actorName,
-        },
-      });
-    }
+    assertValidJwtPayload(payload);
 
     //trick to return extra fields while guarding existing ones
     return (<Principal>{
@@ -62,12 +62,7 @@ function extractKey(possibleKeys: Array<string | undefined>) {
     possibleKeys.filter((key: string | undefined) => key)
   );
 
-  if (!filtered.length) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
-      details: { message: `JWT key undefined!` },
-    });
-  }
+  assertJwtKeyDefined(filtered);
 
   return filtered[0];
 }

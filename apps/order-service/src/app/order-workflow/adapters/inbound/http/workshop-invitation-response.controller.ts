@@ -23,10 +23,13 @@ import {
   DeclineWorkshopInvitationDtoV1,
   WorkshopInvitationAcceptResultDto,
   WorkshopInvitationDeclineResultDto,
+  ConfirmAcceptedInvitationDtoV1,
+  WorkshopInvitationConfirmResultDto,
   WorkshopInvitationResponsePaths,
 } from 'contracts';
 import { validator } from 'adapter';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
+import { ActorName, ActorNames } from 'auth';
 
 @ApiTags('Order workflow')
 @ApiBearerAuth('JWT')
@@ -37,6 +40,7 @@ export class WorkshopInvitationResponseController {
   ) {}
 
   @Post(WorkshopInvitationResponsePaths.Accept)
+  @ActorNames(ActorName.Workshop)
   @UseGuards(OrderAuthGuardProxy)
   @UsePipes(new ValidationPipe(validator))
   @ApiOperation({
@@ -74,7 +78,31 @@ export class WorkshopInvitationResponseController {
     );
   }
 
+  @Post(WorkshopInvitationResponsePaths.Confirm)
+  @UseGuards(OrderAuthGuardProxy)
+  @UsePipes(new ValidationPipe(validator))
+  @ApiOperation({
+    summary: 'Confirm a workshop invitation',
+    description:
+      'Confirms an accepted workshop invitation for an order and returns the updated state.',
+  })
+  @ApiBody({ type: ConfirmAcceptedInvitationDtoV1 })
+  @ApiCreatedResponse({
+    description: 'Invitation confirmed',
+    type: WorkshopInvitationConfirmResultDto,
+  })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  @ApiNotFoundResponse({ description: 'Order or invitation not found (NOT_FOUND)' })
+  @ApiConflictResponse({ description: 'Illegal state transition (ILLEGAL_TRANSITION)' })
+  async confirm(@Body() body: ConfirmAcceptedInvitationDtoV1) {
+    return await this.workshopInvitationResponseService.confirmWorkshopInvitation({
+      orderId: body.orderId,
+      workshopId: body.workshopId,
+    });
+  }
+
   @Post(WorkshopInvitationResponsePaths.Decline)
+  @ActorNames(ActorName.Workshop)
   @UseGuards(OrderAuthGuardProxy)
   @UsePipes(new ValidationPipe(validator))
   @ApiOperation({

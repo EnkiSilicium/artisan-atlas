@@ -21,6 +21,7 @@ import { OrderCancelService } from 'apps/order-service/src/app/order-workflow/ap
 import { OrderCancelDtoV1, OrderInitDtoV1 } from 'contracts';
 import { validator } from 'adapter';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
+import { ActorName, ActorNames } from 'auth';
 
 @ApiTags('Order workflow')
 @ApiBearerAuth('JWT')
@@ -29,6 +30,7 @@ export class OrderCancelController {
   constructor(private readonly orderCancelService: OrderCancelService) {}
 
     @Post()
+    @ActorNames(ActorName.Commissioner)
     @UseGuards(OrderAuthGuardProxy)
     @UsePipes(new ValidationPipe(validator))
     @HttpCode(200)

@@ -16,6 +16,7 @@ import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { EntityTechnicalsInterface, IsoDateTransformer } from 'persistence';
 import { assertValid } from 'shared-kernel';
+import { assertIsObject } from 'shared-kernel';
 import {
   Check,
   Index,
@@ -35,7 +36,7 @@ import {
   'chk_workshopInvitation_payload_by_status',
   `
   (
-    "status" = '${WorkshopInvitationStatus.Accepted}'
+    "status" IN ('${WorkshopInvitationStatus.Accepted}', '${WorkshopInvitationStatus.Confirmed}')
     AND description IS NOT NULL
     AND deadline IS NOT NULL
     AND budget IS NOT NULL
@@ -59,6 +60,7 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
       WorkshopInvitationStatus.Pending,
       WorkshopInvitationStatus.Declined,
       WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
     ],
   })
   @PrimaryColumn('uuid', { name: 'order_id' })
@@ -69,6 +71,7 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
       WorkshopInvitationStatus.Pending,
       WorkshopInvitationStatus.Declined,
       WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
     ],
   })
   @PrimaryColumn('uuid', { name: 'workshop_id' })
@@ -79,16 +82,46 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
   request!: RequestEntity;
 
   // These are nullable in DB because "pending/declined" must not carry payload.
-  // Validators require them only for 'accepted'.
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
-  @IsString({ groups: [WorkshopInvitationStatus.Accepted, 'description'] })
-  @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'description'] })
+  // Validators require them only for 'accepted' or 'confirmed'.
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return (
+      o['status'] === WorkshopInvitationStatus.Accepted ||
+      o['status'] === WorkshopInvitationStatus.Confirmed
+    );
+  })
+  @IsString({
+    groups: [
+      WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
+      'description',
+    ],
+  })
+  @IsNotEmpty({
+    groups: [
+      WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
+      'description',
+    ],
+  })
   @Column('text', { name: 'description', nullable: true })
   description!: string | null;
 
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return (
+      o['status'] === WorkshopInvitationStatus.Accepted ||
+      o['status'] === WorkshopInvitationStatus.Confirmed
+    );
+  })
   //@IsISO8601({}, { groups: [WorkshopInvitationStatus.Accepted, 'deadline'] })
-  @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'deadline'] })
+  @IsNotEmpty({
+    groups: [
+      WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
+      'deadline',
+    ],
+  })
   @Column({
     name: 'deadline',
     type: 'timestamptz',
@@ -97,9 +130,27 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
   })
   deadline!: string | null;
 
-  @ValidateIf((o) => o?.status === WorkshopInvitationStatus.Accepted)
-  @IsString({ groups: [WorkshopInvitationStatus.Accepted, 'budget'] })
-  @IsNotEmpty({ groups: [WorkshopInvitationStatus.Accepted, 'budget'] })
+  @ValidateIf((o: unknown) => {
+    assertIsObject(o);
+    return (
+      o['status'] === WorkshopInvitationStatus.Accepted ||
+      o['status'] === WorkshopInvitationStatus.Confirmed
+    );
+  })
+  @IsString({
+    groups: [
+      WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
+      'budget',
+    ],
+  })
+  @IsNotEmpty({
+    groups: [
+      WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
+      'budget',
+    ],
+  })
   @Column('varchar', { name: 'budget', length: 64, nullable: true })
   budget!: string | null;
 
@@ -107,6 +158,7 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
     groups: [
       WorkshopInvitationStatus.Pending,
       WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
       'status',
       WorkshopInvitationStatus.Declined,
     ],
@@ -115,6 +167,7 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
     groups: [
       WorkshopInvitationStatus.Pending,
       WorkshopInvitationStatus.Accepted,
+      WorkshopInvitationStatus.Confirmed,
       'status',
       WorkshopInvitationStatus.Declined,
     ],
@@ -193,6 +246,20 @@ export class WorkshopInvitation implements EntityTechnicalsInterface {
 
     Logger.verbose({
       message: `Workshop invitation accepted!`,
+      meta: {
+        orderId: this.orderId,
+        workshopId: this.workshopId,
+      },
+    });
+  }
+
+  confirm() {
+    this.assertWorkshopInvitationStatusIs(WorkshopInvitationStatus.Accepted);
+
+    this.status = WorkshopInvitationStatus.Confirmed;
+
+    Logger.verbose({
+      message: `Workshop invitation confirmed!`,
       meta: {
         orderId: this.orderId,
         workshopId: this.workshopId,

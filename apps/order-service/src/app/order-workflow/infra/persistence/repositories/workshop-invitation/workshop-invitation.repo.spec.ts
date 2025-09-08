@@ -19,7 +19,7 @@ import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { MessageProducerPort } from 'adapter';
+import { OutboxService } from 'persistence';
 
 describe('WorkshopInvitationRepo (integration)', () => {
   let moduleRef: TestingModule;
@@ -49,9 +49,9 @@ describe('WorkshopInvitationRepo (integration)', () => {
     });
     await ds.initialize();
 
-    const kafkaMock = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-    } as MessageProducerPort<any>;
+    const outboxMock = {
+      enqueuePublish: jest.fn().mockResolvedValue(undefined),
+    } as unknown as OutboxService;
 
     moduleRef = await Test.createTestingModule({
       providers: [
@@ -59,12 +59,12 @@ describe('WorkshopInvitationRepo (integration)', () => {
         RequestRepo,
         WorkshopInvitationRepo,
         { provide: DataSource, useValue: ds },
-        { provide: 'KAFKA_PUBLISHER', useValue: kafkaMock },
+        { provide: OutboxService, useValue: outboxMock },
         {
           provide: TypeOrmUoW,
-          useFactory: (dataSource: DataSource, kafka: any) =>
-            new TypeOrmUoW(dataSource, kafka),
-          inject: [DataSource, 'KAFKA_PUBLISHER'],
+          useFactory: (dataSource: DataSource, outbox: OutboxService) =>
+            new TypeOrmUoW(dataSource, outbox),
+          inject: [DataSource, OutboxService],
         },
       ],
     }).compile();

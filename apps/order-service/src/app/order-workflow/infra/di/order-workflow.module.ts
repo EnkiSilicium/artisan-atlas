@@ -26,6 +26,7 @@ import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/or
 import { MockAuthGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/mock-auth.guard';
 import { OrderHttpJwtGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/order-http-jwt.guard';
 import { JwtStrategy } from 'apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy';
+import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
 import { orderWorkflowKafkaConfig } from 'apps/order-service/src/app/order-workflow/infra/config/kafka.config';
 import { OrderWorkflowTypeOrmOptions } from 'apps/order-service/src/app/order-workflow/infra/config/typeorm-config';
 import { orderWorkflowWinstonConfig } from 'apps/order-service/src/app/order-workflow/infra/config/winston.config';
@@ -52,11 +53,10 @@ import {
 import { extractBoolEnv } from 'shared-kernel';
 import {AUTH_GUARD} from 'auth'
 import { RedisModule } from '../../../../infra/redis/redis.module';
-import { RequestControlRepository } from '../../../../infra/request-cooldown/request-control.repository';
-import { RequestCooldownGuard } from '../../../../infra/request-cooldown/request-cooldown.guard';
-import { REQUEST_COOLDOWN_CONFIG } from '../../../../infra/request-cooldown/request-cooldown-config.token';
-import { requestCooldownConfig } from '../../../../infra/config/request-cooldown.config';
-import { redisConfig } from '../../../../infra/config/redis.config';
+import { RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
+import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
+import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
+import { requestCooldownConfig } from '../config/request-cooldown.config';
 
 @Module({
   imports: [

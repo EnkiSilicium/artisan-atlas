@@ -114,7 +114,7 @@ async function bootstrap() {
 
   // Graceful shutdown on signals
   const shutdown = async (signal: string) => {
-    console.log(`\nReceived ${signal}. Shutting down...`);
+    console.warn({message: `\nReceived ${signal}. Shutting down...}`});
     process.exit(0);
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
@@ -122,6 +122,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Fatal on bootstrap:', err);
+  console.error({ message: 'Fatal on bootstrap:', err });
   process.exit(1);
 });

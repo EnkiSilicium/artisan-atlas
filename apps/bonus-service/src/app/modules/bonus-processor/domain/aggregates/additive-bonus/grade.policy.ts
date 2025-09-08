@@ -1,5 +1,4 @@
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { assertNonNegativePoints } from './assert-non-negative-points.assertion';
 
 export abstract class GradePolicyAttributes {
   abstract readonly policyName: 'GradePolicy';
@@ -36,14 +35,7 @@ export const GradePolicy: GradePolicyInterface & GradePolicyMethods = {
   version: 1,
 
   getGradeByPoints(this: GradePolicyInterface, points: number): GradeName {
-    if (points < 0) {
-      throw new ProgrammerError({
-        errorObject: ProgrammerErrorRegistry.byCode.BUG,
-        details: {
-          description: `getGradeByPoints only allowed with positive points, received: ${points}`,
-        },
-      });
-    }
+    assertNonNegativePoints({ points });
 
     const gradeNames = Object.values(GradeName) as GradeName[];
     let currentGrade: {

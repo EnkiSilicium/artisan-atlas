@@ -14,9 +14,21 @@ export function makeWorkshopInvitation(
     orderId: randomUUID(),
     workshopId: randomUUID(),
     status,
-    description: status === WorkshopInvitationStatus.Accepted ? 'd' : null,
-    deadline: status === WorkshopInvitationStatus.Accepted ? isoNow() : null,
-    budget: status === WorkshopInvitationStatus.Accepted ? '100' : null,
+    description:
+      status === WorkshopInvitationStatus.Accepted ||
+      status === WorkshopInvitationStatus.Confirmed
+        ? 'd'
+        : null,
+    deadline:
+      status === WorkshopInvitationStatus.Accepted ||
+      status === WorkshopInvitationStatus.Confirmed
+        ? isoNow()
+        : null,
+    budget:
+      status === WorkshopInvitationStatus.Accepted ||
+      status === WorkshopInvitationStatus.Confirmed
+        ? '100'
+        : null,
     createdAt: isoNow(),
     lastUpdatedAt: isoNow(),
     version: 1,

@@ -1,7 +1,6 @@
 import { AsyncLocalStorage } from 'async_hooks';
 
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { assertInsideTransaction } from '../assertions/assert-inside-transaction.assertion';
 
 import type { BaseEvent } from 'libs/contracts/src/_common/base-event.event';
 import type { OutboxMessage } from 'libs/persistence/src/lib/entities/outbox-message.entity';
@@ -38,17 +37,18 @@ export function currentManager(ds: { manager: EntityManager }): EntityManager {
 export function requireTxManager(ds: {
   manager: EntityManager;
 }): EntityManager {
-  const manager = getAmbient()?.manager;
-  if (!manager) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
-      details: {
-        description: `using '${requireTxManager.name}' outside of transaction`,
-      },
-    });
-  }
+  const ambient = getAmbient();
 
-  return manager;
+  const ensure = 'manager'
+  const whenCalledFrom = requireTxManager.name
+
+  assertInsideTransaction(
+    ambient,
+    ensure,
+    whenCalledFrom,
+  );
+
+  return ambient.manager;
 }
 
 /**
@@ -58,16 +58,18 @@ export function requireTxManager(ds: {
  * @param cb callback
  */
 export function registerBeforeCommit(cb: () => Promise<void> | void) {
-  const s = getAmbient();
-  if (!s?.beforeCommit) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
-      details: {
-        description: `using '${registerBeforeCommit.name}' outside of transaction`,
-      },
-    });
-  }
-  s.beforeCommit.push(cb);
+  const ambient = getAmbient();
+
+  const ensure = 'beforeCommit'
+  const whenCalledFrom = registerBeforeCommit.name
+
+
+  assertInsideTransaction(
+    ambient,
+    ensure,
+    whenCalledFrom,
+  );
+  ambient.beforeCommit.push(cb);
 }
 
 /**
@@ -77,16 +79,18 @@ export function registerBeforeCommit(cb: () => Promise<void> | void) {
  * @param cb callback
  */
 export function registerAfterCommit(cb: () => Promise<void> | void) {
-  const s = getAmbient();
-  if (!s?.afterCommit) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
-      details: {
-        description: `using '${registerAfterCommit.name}' outside of transaction`,
-      },
-    });
-  }
-  s.afterCommit.push(cb);
+  const ambient = getAmbient();
+
+  const ensure = 'afterCommit'
+  const whenCalledFrom = registerAfterCommit.name
+
+  assertInsideTransaction(
+    ambient,
+    ensure,
+    whenCalledFrom,
+  );
+
+  ambient.afterCommit.push(cb);
 }
 
 /**
@@ -100,15 +104,15 @@ export function registerAfterCommit(cb: () => Promise<void> | void) {
 export function enqueueOutbox<e extends BaseEvent<string>>(
   message: OutboxMessage<e>,
 ) {
-  const s = getAmbient();
-  if (!s?.outboxBuffer) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
-      details: {
-        description: `using '${enqueueOutbox.name}' outside of transaction`,
-      },
-    });
-  }
+  const ambient = getAmbient();
+  const ensure = 'outboxBuffer'
+  const whenCalledFrom = enqueueOutbox.name
+
+  assertInsideTransaction(
+    ambient,
+    ensure,
+    whenCalledFrom,
+  );
   //assertImplementsEntityTechnicals(message.payload);
 
   if (hasTimeMarkers(message.payload)) {
@@ -121,7 +125,7 @@ export function enqueueOutbox<e extends BaseEvent<string>>(
     );
   }
 
-  s.outboxBuffer.push(message);
+  ambient.outboxBuffer.push(message);
 }
 
 function hasTimeMarkers(
