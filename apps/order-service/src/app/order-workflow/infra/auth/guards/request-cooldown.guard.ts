@@ -3,11 +3,11 @@ import type { Request, Response } from 'express';
 import { ActorName, assertIsPrincipalObject, Principal } from 'auth';
 import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
-import { RequestControlRepository } from './request-control.repository';
+import { RequestControlRepository } from '../request-cooldown/request-control.repository';
 import {
   REQUEST_COOLDOWN_CONFIG,
   type RequestCooldownConfig,
-} from './request-cooldown-config.token';
+} from '../request-cooldown/request-cooldown-config.token';
 
 @Injectable()
 export class RequestCooldownGuard implements CanActivate {
