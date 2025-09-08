@@ -27,7 +27,7 @@ import {
 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
-import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion.js';
+import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion';
 
 @Injectable()
 export class WorkshopInvitationResponseService {

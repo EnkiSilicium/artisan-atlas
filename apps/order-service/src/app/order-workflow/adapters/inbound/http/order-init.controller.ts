@@ -38,7 +38,6 @@ export class OrderInitController {
     summary: 'Create a new order',
     description:
       'Creates a new order with an initial request and selected workshops.',
-      'Creates a new order with an initial request and selected workshops.',
   })
   @ApiBody({ type: OrderInitDtoV1 })
   @ApiCreatedResponse({
@@ -47,9 +46,6 @@ export class OrderInitController {
   })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiNotFoundResponse({ description: 'Workshop not found (NOT_FOUND)' })
-  @ApiUnprocessableEntityResponse({
-    description: 'Domain validation failed (VALIDATION)',
-  })
   @ApiUnprocessableEntityResponse({
     description: 'Domain validation failed (VALIDATION)',
   })
