@@ -27,6 +27,7 @@ import {
 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
+import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion.js';
 
 @Injectable()
 export class WorkshopInvitationResponseService {
@@ -42,7 +43,6 @@ export class WorkshopInvitationResponseService {
   ): Promise<WorkshopInvitationAcceptResultDto> {
     return this.uow.runWithRetry({}, async () => {
       const order = cmd.order ?? (await this.orderRepo.findById(cmd.orderId));
-
       assertIsFound(order, Order, {
         orderId: cmd.orderId,
       });
@@ -61,6 +61,9 @@ export class WorkshopInvitationResponseService {
       const stages = cmd.payload.stages
         ? new StagesAggregate(cmd.payload.stages)
         : new StagesAggregate([stageDefault]);
+
+
+      assertIsStillPendingInvitations(order)
 
       workshopInvitation.accept(cmd.payload);
 
