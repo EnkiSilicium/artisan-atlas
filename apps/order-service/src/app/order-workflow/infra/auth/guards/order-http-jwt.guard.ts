@@ -88,7 +88,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
       const orderId = body.orderId;
       if (!orderId) {
         this.logger.warn({
-          message: `Payload missing orderId; skipping ownership check. Are you sure the belongs here: ${req.url}?`,
+          message: `Payload missing orderId; skipping ownership check. Path: ${req.url}`,
           meta: {
             path: req.url,
             method: req.method,

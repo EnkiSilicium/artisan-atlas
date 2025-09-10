@@ -31,7 +31,7 @@ export class OrderComfirmCompletionController {
         description:
             'Confirm completion an existing order based on the provided order ID - done by commissioner.',
     })
-    @ApiBody({ type: OrderInitDtoV1 })
+    @ApiBody({ type: OrderConfirmCompletionDtoV1 })
     @ApiCreatedResponse({ description: 'Order canceled successfully' })
     @ApiBadRequestResponse({ description: 'Validation failed' })
     @ApiNotFoundResponse({ description: 'Order not found (NOT_FOUND)' })

@@ -2,10 +2,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KAFKA_PRODUCER, KafkaProducerPort } from 'adapter';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { MockController } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/http/mock-controller';
-import { BonusEventsConsumer } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/messaging/kafka.consumer';
+import { BonusEventsConsumer } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/messaging/bonus-events.consumer';
 import { BonusEventDispatcher } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka-producer';
+import { BonusEventRedisDispatcher } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/redis-producer';
 import { BonusEventService } from 'apps/bonus-service/src/app/modules/bonus-processor/application/services/bonus-event/bonus-event.service';
 import { bonusProcessorKafkaConfig } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/kafka.config';
 import { bonusProcessorTypeOrmOptions } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/typeorm-config';
@@ -29,6 +30,8 @@ import {
   OutboxService,
   TypeOrmUoW,
 } from 'persistence';
+import { extractBoolEnv } from 'shared-kernel';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 
 @Module({
   imports: [
@@ -61,16 +64,22 @@ import {
 
     
     ClientsModule.register([
-      {
-        name: KAFKA_PRODUCER,
-        transport: Transport.KAFKA,
-        options: {
-          client: bonusProcessorKafkaConfig.client,
-          producer: bonusProcessorKafkaConfig.producer,
-          run: bonusProcessorKafkaConfig.run,
-          consumer: bonusProcessorKafkaConfig.consumer,
-        },
-      },
+      extractBoolEnv(process.env.USE_REDIS_MQ)
+        ? {
+            name: MQ_PRODUCER,
+            transport: Transport.REDIS,
+            options: redisConfig(),
+          }
+        : {
+            name: MQ_PRODUCER,
+            transport: Transport.KAFKA,
+            options: {
+              client: bonusProcessorKafkaConfig.client,
+              producer: bonusProcessorKafkaConfig.producer,
+              run: bonusProcessorKafkaConfig.run,
+              consumer: bonusProcessorKafkaConfig.consumer,
+            },
+          },
     ]),
 
     WinstonModule.forRoot({
@@ -89,10 +98,17 @@ import {
     BonusEventRepo,
     AdditiveBonusRepo,
     VipProfileRepo,
-    { provide: KafkaProducerPort, useClass: BonusEventDispatcher },
+    {
+      provide: MessageProducerPort,
+      useClass: extractBoolEnv(process.env.USE_REDIS_MQ)
+        ? BonusEventRedisDispatcher
+        : BonusEventDispatcher,
+    },
     LoggingInterceptor,
     HttpErrorInterceptor,
-    KafkaErrorInterceptor,
+    ...(extractBoolEnv(process.env.USE_REDIS_MQ)
+      ? []
+      : [KafkaErrorInterceptor]),
     {
       provide: HttpErrorInterceptorOptions,
       useValue: {
@@ -101,12 +117,16 @@ import {
         addNoStoreHeaders: true,
       },
     },
-    {
-      provide: KafkaErrorInterceptorOptions,
-      useValue: {
-        maxRetries: 5,
-      },
-    },
+    ...(extractBoolEnv(process.env.USE_REDIS_MQ)
+      ? []
+      : [
+          {
+            provide: KafkaErrorInterceptorOptions,
+            useValue: {
+              maxRetries: 5,
+            },
+          },
+        ]),
   ],
 })
 export class BonusProcessorModule { }

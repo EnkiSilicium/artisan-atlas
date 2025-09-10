@@ -9,17 +9,17 @@ import { BonusEventEntity } from 'apps/bonus-service/src/app/modules/bonus-proce
 import { makeBonusEvent } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/common/bonus-event.entity.mock-factory';
 import { LastMonthEventSet } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/last-month-event-set.entity';
 import { VipProfile } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity';
-import { inRollbackedTestTx, requireTxManager, TypeOrmUoW } from 'persistence';
+import { inRollbackedTestTx, OutboxService, requireTxManager, TypeOrmUoW } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import { BonusEventRepo } from './bonus-event.repo';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { KafkaProducerPort } from 'adapter';
+import type { MessageProducerPort } from 'adapter';
 
 const kafkaMock = {
   dispatch: jest.fn().mockResolvedValue(undefined),
-} as KafkaProducerPort<any>;
+} as MessageProducerPort<any>;
 
 jest.setTimeout(60_000);
 
@@ -60,7 +60,7 @@ describe('BonusEventRepo (integration)', () => {
         { provide: DataSource, useValue: ds },
         {
           provide: TypeOrmUoW,
-          useFactory: () => new TypeOrmUoW(ds, kafkaMock),
+          useFactory: () => new TypeOrmUoW(ds, {} as OutboxService, kafkaMock),
         },
       ],
     }).compile();

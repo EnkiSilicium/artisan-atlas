@@ -14,7 +14,7 @@ export class AllResponsesReceivedEventV1
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   @IsNotEmpty()

@@ -3,17 +3,17 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KAFKA_PRODUCER } from 'adapter';
-import { KafkaProducerPort } from 'adapter';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { OrderComfirmCompletionController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order-confirm-completion.controller';
 import { OrderInitController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order-init.controller';
 import { OrderCancelController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order.cancel.controller';
 import { StageCompletionController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/stage-completion.controller';
 import { WorkshopInvitationResponseController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/workshop-invitation-response.controller';
-import { WorkshopInvitationTrackerKafkaController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/messaging/workshop-invitation-tracker.kafka';
+import { WorkshopInvitationTrackerConsumer } from 'apps/order-service/src/app/order-workflow/adapters/inbound/messaging/workshop-invitation-tracker.consumer';
 import { WorkshopMockAdapter } from 'apps/order-service/src/app/order-workflow/adapters/outbound/http-clients/workshop.adapter';
 import { WorkshopInvitationTrackerAdapter } from 'apps/order-service/src/app/order-workflow/adapters/outbound/internal/workshop-invitation-tracker.adapter';
 import { OrderEventDispatcher } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka-producer';
+import { OrderEventRedisDispatcher } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/redis-producer';
 import { WorkshopInvitationTrackerPort } from 'apps/order-service/src/app/order-workflow/application/ports/initialize-tracker.port';
 import { WorkshopPort } from 'apps/order-service/src/app/order-workflow/application/ports/workshop.port';
 import { OrderCancelService } from 'apps/order-service/src/app/order-workflow/application/services/order/order-cancel.service';
@@ -52,11 +52,12 @@ import {
 } from 'persistence';
 import { extractBoolEnv } from 'shared-kernel';
 import {AUTH_GUARD} from 'auth'
-import { RedisModule } from '../../../../infra/redis/redis.module';
-import { RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
+import { RedisModule } from './redis.module';
+import { InMemoryRequestControlRepository, RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
 import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
 import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
 import { requestCooldownConfig } from '../config/request-cooldown.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 
 @Module({
   imports: [
@@ -84,16 +85,22 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
       },
     }),
     ClientsModule.register([
-      {
-        name: KAFKA_PRODUCER,
-        transport: Transport.KAFKA,
-        options: {
-          client: orderWorkflowKafkaConfig.client,
-          producer: orderWorkflowKafkaConfig.producer,
-          run: orderWorkflowKafkaConfig.run,
-          consumer: orderWorkflowKafkaConfig.consumer,
-        },
-      },
+      extractBoolEnv(process.env.USE_REDIS_MQ)
+        ? {
+            name: MQ_PRODUCER,
+            transport: Transport.REDIS,
+            options: redisConfig(),
+          }
+        : {
+            name: MQ_PRODUCER,
+            transport: Transport.KAFKA,
+            options: {
+              client: orderWorkflowKafkaConfig.client,
+              producer: orderWorkflowKafkaConfig.producer,
+              run: orderWorkflowKafkaConfig.run,
+              consumer: orderWorkflowKafkaConfig.consumer,
+            },
+          },
     ]),
 
     ...(extractBoolEnv(process.env.DISABLE_AUTH)
@@ -111,7 +118,7 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
     OrderInitController,
     WorkshopInvitationResponseController,
     StageCompletionController,
-    WorkshopInvitationTrackerKafkaController,
+    WorkshopInvitationTrackerConsumer,
     OrderComfirmCompletionController,
     OrderCancelController,
   ],
@@ -126,11 +133,14 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
     OrderCancelService,
 
     RequestControlRepository,
+    InMemoryRequestControlRepository,
     RequestCooldownGuard,
     {
       provide: REQUEST_COOLDOWN_CONFIG,
       useValue: requestCooldownConfig(),
     },
+
+    
 
     OutboxProcessor,
     OutboxService,
@@ -146,12 +156,19 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
       provide: WorkshopInvitationTrackerPort,
       useClass: WorkshopInvitationTrackerAdapter,
     },
-    { provide: KafkaProducerPort, useClass: OrderEventDispatcher },
+    {
+      provide: MessageProducerPort,
+      useClass: extractBoolEnv(process.env.USE_REDIS_MQ)
+        ? OrderEventRedisDispatcher
+        : OrderEventDispatcher,
+    },
     { provide: WorkshopPort, useClass: WorkshopMockAdapter },
 
     LoggingInterceptor,
     HttpErrorInterceptor,
-    KafkaErrorInterceptor,
+    ...(extractBoolEnv(process.env.USE_REDIS_MQ)
+      ? []
+      : [KafkaErrorInterceptor]),
 
     ...(extractBoolEnv(process.env.DISABLE_AUTH) ? [] : [JwtStrategy]),
     //JwtStrategy,
@@ -172,12 +189,16 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
         addNoStoreHeaders: true,
       },
     },
-    {
-      provide: KafkaErrorInterceptorOptions,
-      useValue: {
-        maxRetries: 5,
-      },
-    },
+    ...(extractBoolEnv(process.env.USE_REDIS_MQ)
+      ? []
+      : [
+          {
+            provide: KafkaErrorInterceptorOptions,
+            useValue: {
+              maxRetries: 5,
+            },
+          },
+        ]),
   ],
 })
 export class OrderWorkflowModule { }

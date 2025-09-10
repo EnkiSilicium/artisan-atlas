@@ -7,24 +7,23 @@ import {
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { validator } from 'adapter';
 import { InvitationDeclinedEventV1, KafkaTopics } from 'contracts';
-import { KafkaErrorInterceptor } from 'error-handling/interceptor';
 import { LoggingInterceptor } from 'observability';
 import { assertIsObject } from 'shared-kernel';
 
 import { WorkshopInvitationTracker } from '../../../infra/workshop-invitation-tracker/workshop-invitation-tracker.service';
 
 @Controller()
-export class WorkshopInvitationTrackerKafkaController {
+export class WorkshopInvitationTrackerConsumer {
   constructor(private readonly tracker: WorkshopInvitationTracker) {}
 
-  @UseInterceptors(KafkaErrorInterceptor, LoggingInterceptor)
+  @UseInterceptors(LoggingInterceptor)
   @EventPattern(KafkaTopics.InvitationDeclined)
   @UsePipes(new ValidationPipe(validator))
   async handleDeclined(@Payload() payload: InvitationDeclinedEventV1) {
-    await this.tracker.handleResponse(payload.orderID, true);
+    await this.tracker.handleResponse(payload.orderId, true);
   }
 
-  @UseInterceptors(KafkaErrorInterceptor, LoggingInterceptor)
+  @UseInterceptors(LoggingInterceptor)
   @EventPattern(KafkaTopics.OrderTransitions)
   @UsePipes(new ValidationPipe(validator))
   async handleAccepted(@Payload() payload: unknown) {
@@ -34,6 +33,6 @@ export class WorkshopInvitationTrackerKafkaController {
       return;
     }
 
-    await this.tracker.handleResponse(payload['orderID'] as string, false);
+    await this.tracker.handleResponse(payload['orderId'] as string, false);
   }
 }

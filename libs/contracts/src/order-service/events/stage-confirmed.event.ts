@@ -12,11 +12,11 @@ export class StageConfirmedEventV1 implements BaseEvent<'StageConfirmed'> {
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   @IsNotEmpty()
-  workshopID!: string;
+  workshopId!: string;
 
   @IsString()
   @IsNotEmpty()

@@ -18,7 +18,7 @@ export class CancelledEventV1 implements BaseEvent<'Cancelled'> {
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   cancelledBy!: 'commissioner' | 'workshop';

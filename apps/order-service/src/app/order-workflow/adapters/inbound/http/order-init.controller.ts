@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiNotFoundResponse,
   ApiUnprocessableEntityResponse,
+  ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
 import { OrderInitService } from 'apps/order-service/src/app/order-workflow/application/services/order/order-init.service';
 import { OrderInitResultDto } from 'contracts';
@@ -49,6 +50,7 @@ export class OrderInitController {
   @ApiUnprocessableEntityResponse({
     description: 'Domain validation failed (VALIDATION)',
   })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
   async postOrderInit(@Body() body: OrderInitDtoV1) {
     return await this.orderInitService.orderInit({
       payload: {

@@ -64,6 +64,7 @@ module.exports = async function () {
     KAFKA_BOOTSTRAP: bootstrap,
     KAFKA_BROKER_HOSTNAME: bootstrap.split(':')[0],
     KAFKA_BROKER_PORT: bootstrap.split(':')[1],
+    KAFKA_RETRIES: '100',
 
     // Redis 
     REDIS_HOST,
@@ -77,7 +78,9 @@ module.exports = async function () {
     READ_BASE_URL: `http://127.0.0.1:${READ_PORT}`,
     NODE_ENV: 'development',
     DISABLE_AUTH: 'true',
+    USE_REDIS_MQ: 'false',
     JWT_PUBLIC_KEY: `MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDtN+d1VO2TopWYkmRBXyMe98xMYbRdhw6NR5TgHngnTPm4n6qusTNWMaRmwOFKoAT905V3odVSCx7BcWe0FU2Y3/DQKZkFSaj0J8HF3WX2Im23zDKGlQvRm8g+2jdYKTrTxFqRxTJMoElWTTMIdGUcUo0a4jio1l4aFs9PxatumQIDAQAB`
+  
   };
 
   // Built entry
@@ -88,8 +91,9 @@ module.exports = async function () {
     );
   }
 
-  await new Promise((r) => setTimeout(r, 15_000))
-
+  console.log(`[E2E]: awaiting kafka...`)
+  await new Promise((r) => setTimeout(r, 30_000))
+  console.log(`[E2E]: start!`)
   // Spawn app with the correct env 
   const app = spawn('node', [entry], {
     env,
@@ -113,6 +117,7 @@ module.exports = async function () {
   process.env.REDIS_HOST = env.REDIS_HOST;
   process.env.REDIS_PORT = env.REDIS_PORT;
   process.env.REDIS_URL = env.REDIS_URL;
+  process.env.KAFKA_RETRIES = env.KAFKA_RETRIES;
 
   console.log(`[E2E] Kafka bootstrap: ${env.KAFKA_BOOTSTRAP}`);
   console.log(`[E2E] Redis: ${env.REDIS_URL}`);

@@ -13,18 +13,18 @@ import {
   makeVipProfile,
   makeLMEvent,
 } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity.mock-factory';
-import { inRollbackedTestTx, requireTxManager, TypeOrmUoW } from 'persistence';
+import { inRollbackedTestTx, OutboxService, requireTxManager, TypeOrmUoW } from 'persistence';
 import { isoNow } from 'shared-kernel';
 import { DataSource } from 'typeorm';
 
 import { VipProfileRepo } from './vip-profile.repo';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { KafkaProducerPort } from 'adapter';
+import type { MessageProducerPort } from 'adapter';
 
 const kafkaMock = {
   dispatch: jest.fn().mockResolvedValue(undefined),
-} as KafkaProducerPort<any>;
+} as MessageProducerPort<any>;
 
 jest.setTimeout(60_000);
 
@@ -116,7 +116,7 @@ describe('VipProfileRepo (integration) — save semantics with rollback isolatio
         { provide: DataSource, useValue: ds },
         {
           provide: TypeOrmUoW,
-          useFactory: () => new TypeOrmUoW(ds, kafkaMock),
+          useFactory: () => new TypeOrmUoW(ds, {} as OutboxService, kafkaMock),
         },
       ],
     }).compile();

@@ -7,8 +7,8 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { KAFKA_PRODUCER } from 'adapter'; // token bound to ClientKafka
-import { KafkaProducerPort } from 'adapter';
+import { MQ_PRODUCER } from 'adapter'; // token bound to ClientKafka
+import { MessageProducerPort } from 'adapter';
 import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
 import { BonusEventInstanceUnion } from 'contracts';
 import { assertTopicMappingDefined } from 'adapter';
@@ -19,13 +19,13 @@ import { assertIsObject } from 'shared-kernel';
 @Injectable()
 export class BonusEventDispatcher
   implements
-    KafkaProducerPort<BonusEventInstanceUnion>,
+    MessageProducerPort<BonusEventInstanceUnion>,
     OnModuleInit,
     OnModuleDestroy
 {
   private readonly logger = new Logger(BonusEventDispatcher.name);
 
-  constructor(@Inject(KAFKA_PRODUCER) private readonly client: ClientKafka) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientKafka) {}
 
   async onModuleInit() {
     // ClientKafka needs an explicit connect in app code (Nest won't auto-connect producers)
@@ -86,11 +86,11 @@ export class BonusEventDispatcher
     // Tolerate old casings so partitioning doesn't silently degrade
     return (
       (evt['orderId'] as string | undefined) ??
-      (evt['orderID'] as string | undefined) ??
+      (evt['orderId'] as string | undefined) ??
       (evt['commissionerId'] as string | undefined) ??
-      (evt['commissionerID'] as string | undefined) ??
+      (evt['commissionerId'] as string | undefined) ??
       (evt['workshopId'] as string | undefined) ??
-      (evt['workshopID'] as string | undefined) ??
+      (evt['workshopId'] as string | undefined) ??
       (evt['eventId'] as string | undefined) ??
       (evt['eventID'] as string | undefined) ??
       undefined

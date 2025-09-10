@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 
 import axios from 'axios';
 
-import { ApiPaths, BonusReadPaths, KafkaTopics } from 'contracts';
+import { ApiPaths, BonusReadFlatDto, BonusReadPaths, KafkaTopics, OrderCompletedEventV1, OrderPlacedEventV1 } from 'contracts';
 
 import { Kafka } from 'kafkajs';
 
@@ -104,10 +104,11 @@ describe('Bonus processor integration (Option B)', () => {
     const eventId = randomUUID();
 
     // OrderPlaced
-    const placed = {
+    const placed: OrderPlacedEventV1 = {
       eventName: 'OrderPlaced',
       eventId: eventId,
       orderId: orderId,
+      aggregateVersion: 1,
       commissionerId: commissionerId,
       selectedWorkshops: [workshopId],
       request: {
@@ -137,12 +138,14 @@ describe('Bonus processor integration (Option B)', () => {
     });
 
     // OrderCompleted
-    const completed = {
+    const completed: OrderCompletedEventV1 = {
       eventName: 'OrderCompleted',
+      eventId: randomUUID(),
       orderId: orderId,
       commissionerId: commissionerId,
       workshopId: workshopId,
       confirmedAt: isoNow(),
+      aggregateVersion: 8,
       schemaV: 1,
     };
     console.log(
@@ -207,7 +210,8 @@ describe('Bonus processor integration (Option B)', () => {
     }
 
     console.log(`[E2E] Final Read API response: ${JSON.stringify(res.data)}`);
-    expect(res.data.total).toBeGreaterThan(0);
-    expect(res.data.items[0].totalPoints).toBeGreaterThan(0);
+    expect(res?.data?.total)?.toBeGreaterThan(0);
+    expect((res?.data?.items[0] as BonusReadFlatDto).totalPoints).toBeGreaterThan(0);
+    expect((res?.data?.items[0] as BonusReadFlatDto).totalPoints).toBeGreaterThan(0);
   }, 180_000);
 });

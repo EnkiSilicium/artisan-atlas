@@ -1,0 +1,875 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/order": {
+      "post": {
+        "description": "Creates a new order with an initial request and selected workshops.",
+        "operationId": "OrderInitController_postOrderInit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderInitDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderInitResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Workshop not found (NOT_FOUND)"
+          },
+          "422": {
+            "description": "Domain validation failed (VALIDATION)"
+          },
+          "429": {
+            "description": "Too many requests"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Create a new order",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/workshop-invitation/accept": {
+      "post": {
+        "description": "Accepts a workshop invitation for an order and returns the updated state.",
+        "operationId": "WorkshopInvitationResponseController_accept",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptWorkshopInvitationDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkshopInvitationAcceptResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order or invitation not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Illegal state transition (ILLEGAL_TRANSITION)"
+          },
+          "422": {
+            "description": "Validation failed (VALIDATION)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Accept a workshop invitation",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/workshop-invitation/confirm": {
+      "post": {
+        "description": "Confirms an accepted workshop invitation for an order and returns the updated state.",
+        "operationId": "WorkshopInvitationResponseController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmAcceptedInvitationDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkshopInvitationConfirmResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order or invitation not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Illegal state transition (ILLEGAL_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Confirm a workshop invitation",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/workshop-invitation/decline": {
+      "post": {
+        "description": "Declines a workshop invitation for an order and returns the updated state.",
+        "operationId": "WorkshopInvitationResponseController_decline",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineWorkshopInvitationDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkshopInvitationDeclineResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order or invitation not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Illegal state transition (ILLEGAL_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Decline a workshop invitation",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/stage-completion/mark": {
+      "post": {
+        "description": "Marks a specific stage as completed for an order.",
+        "operationId": "StageCompletionController_mark",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkStageCompletionDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stage marked for completion",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageCompletionMarkResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order or stage not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Invariants violated (INVARIANTS_VIOLATED)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Mark a stage as completed",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/stage-completion/confirm": {
+      "post": {
+        "description": "Confirms that a previously completed stage is accepted.",
+        "operationId": "StageCompletionController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmStageCompletionDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stage confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageCompletionConfirmResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order or stage not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Invariants violated (INVARIANTS_VIOLATED)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Confirm a completed stage",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/order/complete": {
+      "post": {
+        "description": "Confirm completion an existing order based on the provided order ID - done by commissioner.",
+        "operationId": "OrderComfirmCompletionController_postOrderCancel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderConfirmCompletionDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order canceled successfully"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Illegal state transition (ILLEGAL_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          },
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Confirm order completion",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    },
+    "/api/order/cancel": {
+      "post": {
+        "description": "Cancels an existing order based on the provided order ID.",
+        "operationId": "OrderCancelController_postOrderCancel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCancelDtoV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order canceled successfully"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "404": {
+            "description": "Order not found (NOT_FOUND)"
+          },
+          "409": {
+            "description": "Illegal state transition (ILLEGAL_TRANSITION)"
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Cancel an order",
+        "tags": [
+          "Order workflow"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Order workflow API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "Order workflow",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Paste: Bearer <your-JWT>"
+      }
+    },
+    "schemas": {
+      "RequestOrderInitPayloadV1": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Human‑readable title of the order",
+            "example": "Custom table"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the order",
+            "example": "Build a custom wooden table"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Deadline for the order (ISO‑8601 timestamp)",
+            "example": "2024-06-01T00:00:00.000Z"
+          },
+          "budget": {
+            "type": "string",
+            "description": "Proposed budget for the work",
+            "example": "2000"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "deadline",
+          "budget"
+        ]
+      },
+      "OrderInitDtoV1": {
+        "type": "object",
+        "properties": {
+          "commissionerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the commissioner creating the order"
+          },
+          "request": {
+            "description": "Payload describing the order request",
+            "example": {
+              "title": "Custom table",
+              "description": "Build a custom wooden table",
+              "deadline": "2024-06-01T00:00:00.000Z",
+              "budget": "2000"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestOrderInitPayloadV1"
+              }
+            ]
+          },
+          "selectedWorkshops": {
+            "description": "IDs of the selected workshops",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "commissionerId",
+          "request",
+          "selectedWorkshops"
+        ]
+      },
+      "OrderInitResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generated order ID"
+          }
+        },
+        "required": [
+          "orderId"
+        ]
+      },
+      "AcceptWorkshopInvitationPayloadV1": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Additional description supplied by the workshop",
+            "example": "Can start next month"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Proposed deadline for the work (ISO‑8601 timestamp)",
+            "example": "2024-06-01T00:00:00.000Z"
+          },
+          "budget": {
+            "type": "string",
+            "description": "Proposed budget for the work",
+            "example": "1500"
+          }
+        },
+        "required": [
+          "description",
+          "deadline",
+          "budget"
+        ]
+      },
+      "StagesDataV1": {
+        "type": "object",
+        "properties": {
+          "stageName": {
+            "type": "string",
+            "description": "Name of the stage",
+            "example": "Design"
+          },
+          "approximateLength": {
+            "type": "string",
+            "description": "Approximate length of the stage in any format (e.g., \"2 weeks\")",
+            "example": "2 weeks"
+          },
+          "needsConfirmation": {
+            "type": "boolean",
+            "description": "Whether the stage needs confirmation",
+            "example": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the stage",
+            "example": "Initial design work"
+          },
+          "stageOrder": {
+            "type": "number",
+            "description": "Order of the stage",
+            "example": 0
+          }
+        },
+        "required": [
+          "stageName",
+          "approximateLength",
+          "needsConfirmation",
+          "description",
+          "stageOrder"
+        ]
+      },
+      "AcceptWorkshopInvitationDtoV1": {
+        "type": "object",
+        "properties": {
+          "invitationInfo": {
+            "description": "Structured description of the proposal (deadline/budget)",
+            "example": {
+              "description": "Can start next month",
+              "deadline": "2024-06-01T00:00:00.000Z",
+              "budget": "1500"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcceptWorkshopInvitationPayloadV1"
+              }
+            ]
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the workshop accepting the invitation"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the order"
+          },
+          "stages": {
+            "description": "Optional list of stages for the order",
+            "example": [
+              {
+                "stageName": "Design",
+                "approximateLength": "2 weeks",
+                "needsConfirmation": true,
+                "description": "Initial design work",
+                "stageOrder": 0
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StagesDataV1"
+            }
+          }
+        },
+        "required": [
+          "invitationInfo",
+          "workshopId",
+          "orderId"
+        ]
+      },
+      "WorkshopInvitationAcceptResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Workshop ID"
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId"
+        ]
+      },
+      "ConfirmAcceptedInvitationDtoV1": {
+        "type": "object",
+        "properties": {
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the workshop being confirmed"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the order"
+          }
+        },
+        "required": [
+          "workshopId",
+          "orderId"
+        ]
+      },
+      "WorkshopInvitationConfirmResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Workshop ID"
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId"
+        ]
+      },
+      "DeclineWorkshopInvitationDtoV1": {
+        "type": "object",
+        "properties": {
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the workshop declining the invitation"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the order involved"
+          }
+        },
+        "required": [
+          "workshopId",
+          "orderId"
+        ]
+      },
+      "WorkshopInvitationDeclineResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Workshop ID"
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId"
+        ]
+      },
+      "MarkStageCompletionDtoV1": {
+        "type": "object",
+        "properties": {
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the workshop concerned"
+          },
+          "commissionerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the commissioner"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the order for which the stage is being marked"
+          },
+          "stageName": {
+            "type": "string",
+            "description": "Name of the stage to mark as completed",
+            "example": "Delivery"
+          }
+        },
+        "required": [
+          "workshopId",
+          "commissionerId",
+          "orderId",
+          "stageName"
+        ]
+      },
+      "StageCompletionMarkResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Workshop ID"
+          },
+          "stageName": {
+            "type": "string",
+            "description": "Stage name",
+            "example": "Delivery"
+          },
+          "stageCompleted": {
+            "type": "boolean",
+            "description": "Whether the stage was completed",
+            "example": true
+          },
+          "allStagesCompleted": {
+            "type": "boolean",
+            "description": "Whether all stages are completed",
+            "example": false
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId",
+          "stageName",
+          "stageCompleted",
+          "allStagesCompleted"
+        ]
+      },
+      "ConfirmStageCompletionDtoV1": {
+        "type": "object",
+        "properties": {
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the workshop concerned"
+          },
+          "commissionerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the commissioner"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the order for which the stage was completed"
+          },
+          "stageName": {
+            "type": "string",
+            "description": "Name of the stage to confirm",
+            "example": "Delivery"
+          }
+        },
+        "required": [
+          "workshopId",
+          "commissionerId",
+          "orderId",
+          "stageName"
+        ]
+      },
+      "StageCompletionConfirmResultDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "workshopId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Workshop ID"
+          },
+          "stageName": {
+            "type": "string",
+            "description": "Stage name",
+            "example": "Delivery"
+          },
+          "allStagesCompleted": {
+            "type": "boolean",
+            "description": "Whether all stages are completed",
+            "example": false
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId",
+          "stageName",
+          "allStagesCompleted"
+        ]
+      },
+      "InvitationDeclinedEventV1": {
+        "type": "object",
+        "properties": {}
+      },
+      "OrderConfirmCompletionDtoV1": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "description": "Unique identifier of the order",
+            "format": "uuid"
+          },
+          "workshopId": {
+            "type": "string",
+            "description": "Unique identifier of the workshop",
+            "format": "uuid"
+          },
+          "commissionerId": {
+            "type": "string",
+            "description": "Unique identifier of the commissioner",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "orderId",
+          "workshopId",
+          "commissionerId"
+        ]
+      },
+      "OrderCancelDtoV1": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "description": "Unique identifier of the order",
+            "format": "uuid"
+          },
+          "cancelledBy": {
+            "type": "string",
+            "description": "Identifier the actor cancelling the order (unprotected and purely informational)",
+            "example": "system"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for cancelling the order",
+            "example": "Cancelled by customer"
+          }
+        },
+        "required": [
+          "orderId",
+          "cancelledBy"
+        ]
+      }
+    }
+  }
+}

@@ -13,10 +13,7 @@ import { OrderHistoryRefreshWorker } from 'apps/order-service/src/app/read-model
 import { ORDER_HISTORY_REFRESH_QUEUE } from 'apps/order-service/src/app/read-model/infra/workers/order-history-refresh.token';
 import {
   HttpErrorInterceptor,
-  KafkaErrorInterceptor,
   HttpErrorInterceptorOptions,
-  KafkaErrorInterceptorOptions,
-
 } from 'error-handling/interceptor';
 import { WinstonModule } from 'nest-winston';
 import { OpenTelemetryModule } from 'nestjs-otel';

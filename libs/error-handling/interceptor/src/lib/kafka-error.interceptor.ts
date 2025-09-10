@@ -8,7 +8,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { ClientKafka, KafkaContext } from '@nestjs/microservices';
-import { KAFKA_PRODUCER } from 'adapter';
+import { MQ_PRODUCER } from 'adapter';
 import { AppError } from 'error-handling/error-core';
 
 // Your error base + concrete types
@@ -43,7 +43,7 @@ export class KafkaErrorInterceptorOptions {
  */
 @Injectable()
 export class KafkaErrorInterceptor implements NestInterceptor {
-  @Inject(KAFKA_PRODUCER)
+  @Inject(MQ_PRODUCER)
   private readonly dlqProducer!: ClientKafka;
 
   private readonly dlqSuffix: string;

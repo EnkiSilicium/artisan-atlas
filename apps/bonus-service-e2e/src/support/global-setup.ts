@@ -45,8 +45,8 @@ module.exports = async function () {
   const REDIS_PORT = String(redis.getMappedPort(6379)); // mapped high port
 
   // App HTTP ports
-  const PROC_PORT = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3001);
-  const READ_PORT = Number(process.env.BONUS_READ_HTTP_PORT ?? 3002);
+  const PROC_PORT = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3003);
+  const READ_PORT = Number(process.env.BONUS_READ_HTTP_PORT ?? 3004);
 
   // Shared env for app + tests
   const env = {
@@ -64,11 +64,14 @@ module.exports = async function () {
     KAFKA_BOOTSTRAP: bootstrap,
     KAFKA_BROKER_HOSTNAME: bootstrap.split(':')[0],
     KAFKA_BROKER_PORT: bootstrap.split(':')[1],
+    KAFKA_RETRIES: '100',
 
     // Redis 
     REDIS_HOST,
     REDIS_PORT,
     REDIS_URL: `redis://${REDIS_HOST}:${REDIS_PORT}`,
+
+    USE_REDIS_MQ: 'false',
 
     // App HTTP
     BONUS_PROC_HTTP_PORT: String(PROC_PORT),
@@ -112,6 +115,7 @@ module.exports = async function () {
   process.env.REDIS_HOST = env.REDIS_HOST;
   process.env.REDIS_PORT = env.REDIS_PORT;
   process.env.REDIS_URL = env.REDIS_URL;
+  process.env.KAFKA_RETRIES = env.KAFKA_RETRIES;
 
   console.log(`[E2E] Kafka bootstrap: ${env.KAFKA_BOOTSTRAP}`);
   console.log(`[E2E] Redis: ${env.REDIS_URL}`);

@@ -7,8 +7,8 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { KAFKA_PRODUCER } from 'adapter'; // token bound to ClientKafka
-import { KafkaProducerPort } from 'adapter';
+import { MQ_PRODUCER } from 'adapter'; // token bound to ClientKafka
+import { MessageProducerPort } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
 import { OrderEventInstanceUnion } from 'contracts';
 import { assertTopicMappingDefined } from 'adapter';
@@ -19,13 +19,13 @@ import { assertIsObject } from 'shared-kernel';
 @Injectable()
 export class OrderEventDispatcher
   implements
-    KafkaProducerPort<OrderEventInstanceUnion>,
+    MessageProducerPort<OrderEventInstanceUnion>,
     OnModuleInit,
     OnModuleDestroy
 {
   private readonly logger = new Logger(OrderEventDispatcher.name);
 
-  constructor(@Inject(KAFKA_PRODUCER) private readonly client: ClientKafka) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientKafka) {}
 
   async onModuleInit() {
     // ClientKafka needs an explicit connect in app code (Nest won't auto-connect producers)
@@ -87,11 +87,11 @@ export class OrderEventDispatcher
     assertIsObject(evt);
     return (
       (evt['orderId'] as string | undefined) ??
-      (evt['orderID'] as string | undefined) ??
+      (evt['orderId'] as string | undefined) ??
       (evt['commissionerId'] as string | undefined) ??
-      (evt['commissionerID'] as string | undefined) ??
+      (evt['commissionerId'] as string | undefined) ??
       (evt['workshopId'] as string | undefined) ??
-      (evt['workshopID'] as string | undefined) ??
+      (evt['workshopId'] as string | undefined) ??
       (evt['eventId'] as string | undefined) ??
       (evt['eventID'] as string | undefined) ??
       undefined

@@ -2,18 +2,20 @@
 import {
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
   Logger,
 } from '@nestjs/common';
+import type {ExecutionContext, CallHandler} from '@nestjs/common'
 import { KafkaContext } from '@nestjs/microservices';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { Span } from 'nestjs-otel';
+
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
 
+  @Span()
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     Logger.debug({ message: `${LoggingInterceptor.name} active` });
 

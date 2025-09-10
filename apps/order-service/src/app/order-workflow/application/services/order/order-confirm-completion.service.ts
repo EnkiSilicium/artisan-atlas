@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { assertIsFound } from 'apps/order-service/src/app/order-workflow/domain/entities/common/assert-is-found.assertion';
 import { Order } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
-import { OrderCompletedV1 } from 'contracts';
+import { OrderCompletedEventV1 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
 
@@ -33,7 +33,7 @@ export class OrderComfirmCompletionService {
 
       await this.orderRepo.update(order);
 
-      const eventPayload: OrderCompletedV1 = {
+      const eventPayload: OrderCompletedEventV1 = {
         eventId: randomUUID(),
         eventName: 'OrderCompleted',
         orderId: order.orderId,

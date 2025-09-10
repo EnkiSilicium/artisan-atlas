@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { KafkaProducerPort } from 'adapter';
+import { MessageProducerPort } from 'adapter';
 import { Job } from 'bullmq';
 import { BaseEvent } from 'libs/contracts/src/_common/base-event.event';
 import { OutboxMessage } from 'libs/persistence/src/lib/entities/outbox-message.entity';
@@ -23,7 +23,7 @@ export class OutboxProcessor extends WorkerHost {
   constructor(
     private readonly ds: DataSource,
     // bind your concrete implementation somewhere in a module provider
-    private readonly producer: KafkaProducerPort<EventPayload>,
+    private readonly producer: MessageProducerPort<EventPayload>,
   ) {
     super();
   }
@@ -64,7 +64,7 @@ export class OutboxProcessor extends WorkerHost {
       return;
     }
 
-    // Publish to Kafka (your concrete KafkaProducerPort handles routing)
+    // Publish to broker (your concrete MessageProducerPort handles routing)
     try {
       Logger.verbose({
         message: `Attempting producer dispatch for events ${events.map((e) => e.eventName).join(` ,`)}`,

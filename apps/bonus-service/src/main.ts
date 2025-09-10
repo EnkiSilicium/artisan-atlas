@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { bonusProcessorKafkaConfig } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/kafka.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 import { BonusProcessorModule } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/di/bonus-processor.module';
 import { BonusReadModule } from 'apps/bonus-service/src/app/modules/read-projection/infra/di/bonus-read.module';
 import { ApiPaths } from 'contracts';
@@ -13,9 +14,12 @@ import {
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { LoggingInterceptor } from 'observability';
 import { otelSDK } from 'observability';
+import { extractBoolEnv } from 'shared-kernel';
 
 import type { INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
+import { join } from 'path';
+import { mkdirSync, writeFileSync } from 'fs';
 
 function setupSwagger(
   app: INestApplication,
@@ -31,10 +35,18 @@ function setupSwagger(
     .build();
   const doc = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(path, app, doc, { customSiteTitle: title });
+
+  
+  if (process.argv.includes('--emit-openapi')) {
+    const outDir = join(process.cwd(), 'openapi');
+    mkdirSync(outDir, { recursive: true });
+    const jsonPath = join(outDir, `${title}.${version}.json`);
+    writeFileSync(jsonPath, JSON.stringify(document, null, 2));
+  }
 }
 
 async function startBonusProcessorApp() {
-  const httpPort = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3001);
+  const httpPort = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3003);
 
   const app = await NestFactory.create(BonusProcessorModule, {
     bufferLogs: true,
@@ -42,23 +54,27 @@ async function startBonusProcessorApp() {
   //app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.enableShutdownHooks();
   app.setGlobalPrefix(process.env.HTTP_PREFIX ?? ApiPaths.Root);
+  const useRedisMq = extractBoolEnv(process.env.USE_REDIS_MQ);
   app.useGlobalInterceptors(
-    app.get(KafkaErrorInterceptor),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
     app.get(HttpErrorInterceptor),
     app.get(LoggingInterceptor),
   );
 
-  const microservice = app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.KAFKA,
-    options: {
-      client: bonusProcessorKafkaConfig.client,
-      consumer: bonusProcessorKafkaConfig.consumer,
-      producer: bonusProcessorKafkaConfig.producer,
-      run: bonusProcessorKafkaConfig.run,
-    },
-  });
+  const microserviceOptions: MicroserviceOptions = useRedisMq
+    ? { transport: Transport.REDIS, options: redisConfig() }
+    : {
+      transport: Transport.KAFKA,
+      options: {
+        client: bonusProcessorKafkaConfig.client,
+        consumer: bonusProcessorKafkaConfig.consumer,
+        producer: bonusProcessorKafkaConfig.producer,
+        run: bonusProcessorKafkaConfig.run,
+      },
+    };
+  const microservice = app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
   microservice.useGlobalInterceptors(
-    app.get(KafkaErrorInterceptor),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
     app.get(LoggingInterceptor),
   );
 
@@ -78,7 +94,7 @@ async function startBonusProcessorApp() {
 }
 
 async function startBonusReadApp() {
-  const httpPort = Number(process.env.BONUS_READ_HTTP_PORT ?? 3002);
+  const httpPort = Number(process.env.BONUS_READ_HTTP_PORT ?? 3004);
 
   const app = await NestFactory.create(BonusReadModule, { bufferLogs: true });
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
@@ -108,7 +124,7 @@ async function bootstrap() {
 
   // Graceful shutdown on signals
   const shutdown = async (signal: string) => {
-    console.warn({message: `\nReceived ${signal}. Shutting down...}`});
+    console.warn({ message: `\nReceived ${signal}. Shutting down...}` });
     process.exit(0);
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
