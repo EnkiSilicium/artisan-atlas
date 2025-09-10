@@ -43,7 +43,7 @@ export async function updateWithVersionGuard<T extends object>(input: {
 
   assertPositiveInteger({
     value: currentVersion,
-    description: `version must be a positive integer; do not use ${updateWithVersionGuard.name} for inserts`,
+    description: `version must be a positive integer, not ${currentVersion}; do not use ${updateWithVersionGuard.name} for inserts`,
   });
 
   assertImplementsEntityTechnicals(input.entity);

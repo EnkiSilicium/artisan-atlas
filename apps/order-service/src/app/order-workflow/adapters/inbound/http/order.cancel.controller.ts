@@ -38,7 +38,7 @@ export class OrderCancelController {
         summary: 'Cancel an order',
         description: 'Cancels an existing order based on the provided order ID.',
     })
-    @ApiBody({ type: OrderInitDtoV1 })
+    @ApiBody({ type: OrderCancelDtoV1 })
     @ApiCreatedResponse({ description: 'Order canceled successfully' })
     @ApiBadRequestResponse({ description: 'Validation failed' })
     @ApiNotFoundResponse({ description: 'Order not found (NOT_FOUND)' })

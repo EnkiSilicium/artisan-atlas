@@ -75,7 +75,7 @@ export class OrderHistoryQueryResultFlatDto {
   @ApiProperty({
     type: String,
     description: 'Request budget',
-    example: '2000',
+    example: 'within 2000 usd, 3000 usd abolute max',
   })
   requestBudget!: string;
 

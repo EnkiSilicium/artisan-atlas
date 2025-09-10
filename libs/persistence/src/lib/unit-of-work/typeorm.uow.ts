@@ -17,6 +17,10 @@ import { OutboxService } from 'libs/persistence/src/lib/services/schedule-outbox
 import { DataSource, In, QueryRunner } from 'typeorm';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 
+/**
+ * Custom UoW supporting after/before commit hooks. Manages outbox as well:
+ * call `enqueueOutbox` function to schedule events for dispatch if commited.
+ */
 @Injectable()
 export class TypeOrmUoW {
   constructor(
@@ -110,7 +114,7 @@ export class TypeOrmUoW {
             //success of kafka publish should not be coupled to the success of transaction.
             Logger.warn({
               message: `Publish failed: ${error?.message ?? 'unknown reason'}, scheduling retry...`,
-              meta: { error, producer: (this.producer as any)?.name ?? 'unspecified'},
+              meta: { error, producer: (this.producer as any)?.name ?? 'unspecified' },
             });
 
             try {
@@ -157,13 +161,22 @@ export class TypeOrmUoW {
     fn: () => Promise<T>,
     opts?: { isolation?: IsolationLevel },
   ): Promise<T> {
-    try {
-      return await this.run(context, fn, opts);
-    } catch (error) {
-      if (error instanceof InfraError && error.retryable === true) {
-        return await this.run(context, fn, opts);
-      }
-      remapTypeOrmPgErrorToInfra(error as Error);
-    }
+
+    return await this.run(context, fn, opts)
+      .catch(async (error) => {
+        if (error instanceof InfraError && error.retryable === true) {
+          Logger.warn({
+            message: `Retryable infra error during UoW: ${error.name ?? 'unspecified'}. Retrying...`,
+            cause: { ...error }
+          })
+          return await this.run(context, fn, opts);
+        } else {
+          throw error
+
+        }
+      })
+      .catch((error) => {
+        remapTypeOrmPgErrorToInfra(error as Error);
+      })
   }
 }
