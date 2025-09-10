@@ -18,6 +18,10 @@ export class OrderPlacedEventV1 implements BaseEvent<'OrderPlaced'> {
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   orderID!: string;
 
   @IsString()

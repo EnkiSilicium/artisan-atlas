@@ -34,6 +34,7 @@ export class OrderCancelService {
       await this.orderRepo.update(order);
 
       const eventPayload: OrderCancelledEventV1 = {
+        eventId: randomUUID(),
         eventName: 'OrderCancelled',
         orderId: order.orderId,
         cancelledBy: order.createdAt,

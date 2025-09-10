@@ -10,6 +10,10 @@ export class InvitationDeclinedEventV1
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   commissionerId!: string;
 
   @IsString()

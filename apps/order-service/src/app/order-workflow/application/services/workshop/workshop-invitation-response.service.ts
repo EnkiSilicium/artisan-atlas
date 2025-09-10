@@ -71,6 +71,7 @@ export class WorkshopInvitationResponseService {
       await this.workshopInvitationsRepo.update(workshopInvitation);
 
       const eventPayload: InvitationAcceptedEventV1 = {
+        eventId: randomUUID(),
         commissionerId: order.commissionerId,
         eventName: 'InvitationAccepted',
         acceptedAt: isoNow(),
@@ -111,6 +112,7 @@ export class WorkshopInvitationResponseService {
       await this.orderRepo.update(order);
 
       const eventPayload: InvitationConfirmedEventV1 = {
+        eventId: randomUUID(),
         commissionerId: order.commissionerId,
         eventName: 'InvitationConfirmed',
         confirmedAt: isoNow(),
@@ -158,6 +160,7 @@ export class WorkshopInvitationResponseService {
       await this.orderRepo.update(order);
 
       const eventPayload: InvitationDeclinedEventV1 = {
+        eventId: randomUUID(),
         commissionerId: order.commissionerId,
         eventName: 'InvitationDeclined',
         declinedAt: isoNow(),

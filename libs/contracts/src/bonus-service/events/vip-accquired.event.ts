@@ -8,6 +8,10 @@ export class VipAccquiredEventV1 implements BaseEvent<'VipAccquired'> {
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   commissionerId!: string;
 
   @Equals(1)

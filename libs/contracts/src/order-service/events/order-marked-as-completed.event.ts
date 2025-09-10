@@ -16,6 +16,10 @@ export class OrderMarkedAsCompletedEventV1
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   orderId!: string;
 
   @IsString()

@@ -5,11 +5,16 @@ import {
   Equals,
   IsInt,
 } from 'class-validator';
+import { BaseEvent } from 'libs/contracts/src/_common/base-event.event';
 
-export class OrderCompletedV1 {
+export class OrderCompletedV1 implements BaseEvent<'OrderCompleted'> {
   @IsString()
   @IsNotEmpty()
   eventName!: 'OrderCompleted';
+
+  @IsString()
+  @IsNotEmpty()
+  eventId!: string;
 
   @IsString()
   @IsNotEmpty()

@@ -65,6 +65,7 @@ export class OrderInitService {
       await this.workshopInvitationRepo.insertMany(workshopInvitations);
 
       const eventPayload: OrderPlacedEventV1 = {
+        eventId: randomUUID(),
         eventName: 'OrderPlaced',
         commissionerId: cmd.payload.commissionerId,
         orderID: order.orderId,
