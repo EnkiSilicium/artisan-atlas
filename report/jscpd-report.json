@@ -3816,7 +3816,7 @@
     {
       "format": "typescript",
       "lines": 22,
-      "fragment": "@IsString()\r\n  @IsNotEmpty()\r\n  orderID!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  workshopID!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  commissionerId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  stageName!: string;\r\n\r\n  @Equals(1)\r\n  schemaV!: 1;\r\n\r\n  @IsISO8601()\r\n  confirmedAt!: string;\r\n}",
+      "fragment": "@IsString()\r\n  @IsNotEmpty()\r\n  orderId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  workshopId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  commissionerId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  stageName!: string;\r\n\r\n  @Equals(1)\r\n  schemaV!: 1;\r\n\r\n  @IsISO8601()\r\n  confirmedAt!: string;\r\n}",
       "tokens": 0,
       "firstFile": {
         "name": "libs\\contracts\\src\\order-service\\events\\stage-confirmation-marked.event.ts",
@@ -3852,7 +3852,7 @@
     {
       "format": "typescript",
       "lines": 17,
-      "fragment": "@IsString()\r\n  @IsNotEmpty()\r\n  commissionerId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  orderID!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  workshopID!: string;\r\n\r\n  @Equals(1)\r\n  schemaV!: 1;\r\n\r\n  @IsISO8601()\r\n  acceptedAt",
+      "fragment": "@IsString()\r\n  @IsNotEmpty()\r\n  commissionerId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  orderId!: string;\r\n\r\n  @IsString()\r\n  @IsNotEmpty()\r\n  workshopId!: string;\r\n\r\n  @Equals(1)\r\n  schemaV!: 1;\r\n\r\n  @IsISO8601()\r\n  acceptedAt",
       "tokens": 0,
       "firstFile": {
         "name": "libs\\contracts\\src\\order-service\\events\\invitation-accepted.event.ts",
@@ -6696,7 +6696,7 @@
     {
       "format": "typescript",
       "lines": 14,
-      "fragment": ": isoNow(),\r\n        orderID: order.orderId,\r\n        schemaV: 1,\r\n        workshopID: cmd.workshopId,\r\n      };\r\n\r\n      enqueueOutbox({\r\n        id: randomUUID(),\r\n        createdAt: isoNow(),\r\n        payload: { ...eventPayload },\r\n      });\r\n    });\r\n  }\r\n}",
+      "fragment": ": isoNow(),\r\n        orderId: order.orderId,\r\n        schemaV: 1,\r\n        workshopId: cmd.workshopId,\r\n      };\r\n\r\n      enqueueOutbox({\r\n        id: randomUUID(),\r\n        createdAt: isoNow(),\r\n        payload: { ...eventPayload },\r\n      });\r\n    });\r\n  }\r\n}",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service\\src\\app\\order-workflow\\application\\services\\workshop\\workshop-invitation-response.service.ts",
@@ -6840,7 +6840,7 @@
     {
       "format": "typescript",
       "lines": 18,
-      "fragment": "const stageConfirmedEventPayload: StageConfirmedEventV1 = {\r\n        commissionerId: order.commissionerId,\r\n        confirmedAt: isoNow(),\r\n        eventName: 'StageConfirmed',\r\n        orderID: order.orderId,\r\n        schemaV: 1,\r\n        stageName: cmd.payload.stageName,\r\n        workshopID: cmd.workshopId,\r\n      };\r\n      enqueueOutbox({\r\n        id: randomUUID(),\r\n        createdAt: isoNow(),\r\n        payload: {\r\n          ...stageConfirmedEventPayload,\r\n        },\r\n      });\r\n\r\n      if",
+      "fragment": "const stageConfirmedEventPayload: StageConfirmedEventV1 = {\r\n        commissionerId: order.commissionerId,\r\n        confirmedAt: isoNow(),\r\n        eventName: 'StageConfirmed',\r\n        orderId: order.orderId,\r\n        schemaV: 1,\r\n        stageName: cmd.payload.stageName,\r\n        workshopId: cmd.workshopId,\r\n      };\r\n      enqueueOutbox({\r\n        id: randomUUID(),\r\n        createdAt: isoNow(),\r\n        payload: {\r\n          ...stageConfirmedEventPayload,\r\n        },\r\n      });\r\n\r\n      if",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service\\src\\app\\order-workflow\\application\\services\\stage\\stage-completion.service.ts",
@@ -8208,7 +8208,7 @@
     {
       "format": "typescript",
       "lines": 9,
-      "fragment": "),\r\n      ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderID;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await",
+      "fragment": "),\r\n      ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderId;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service-e2e\\src\\order-service\\order-workflow.spec.ts",
@@ -8280,7 +8280,7 @@
     {
       "format": "typescript",
       "lines": 12,
-      "fragment": "),\r\n        String(KafkaTopics.AllStagesCompleted),\r\n      ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderID;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: invited",
+      "fragment": "),\r\n        String(KafkaTopics.AllStagesCompleted),\r\n      ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderId;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: invited",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service-e2e\\src\\order-service\\order-workflow.spec.ts",
@@ -8352,7 +8352,7 @@
     {
       "format": "typescript",
       "lines": 11,
-      "fragment": "],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderID;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: workshops,\r\n          request: { title: 'bad'",
+      "fragment": "],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderId;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: workshops,\r\n          request: { title: 'bad'",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service-e2e\\src\\order-service\\order-workflow.spec.ts",
@@ -8496,7 +8496,7 @@
     {
       "format": "typescript",
       "lines": 11,
-      "fragment": ") ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderID;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: workshops,\r\n          request: { title: 'bad', description: 'confirm-before-mark'",
+      "fragment": ") ],\r\n      ({ headers, value }) => {\r\n        const name = headers['x-event-name'];\r\n        const vOrderId = value?.orderId ?? value?.orderId;\r\n        if (name && vOrderId && vOrderId === orderId) seen.add(name);\r\n      },\r\n      async () => {\r\n        await axios.post(`${CMD}/api/order`, {\r\n          commissionerId,\r\n          selectedWorkshops: workshops,\r\n          request: { title: 'bad', description: 'confirm-before-mark'",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\order-service-e2e\\src\\order-service\\order-workflow.spec.ts",

@@ -60,10 +60,10 @@ export class StageCompletionService {
 
         confirmedAt: isoNow(),
         eventName: 'StageConfirmationMarked',
-        orderID: order.orderId,
+        orderId: order.orderId,
         schemaV: 1,
         stageName: cmd.payload.stageName,
-        workshopID: cmd.workshopId,
+        workshopId: cmd.workshopId,
       };
       enqueueOutbox({
         id: randomUUID(),
@@ -79,10 +79,10 @@ export class StageCompletionService {
           commissionerId: order.commissionerId,
           confirmedAt: isoNow(),
           eventName: 'StageConfirmed',
-          orderID: order.orderId,
+          orderId: order.orderId,
           schemaV: 1,
           stageName: cmd.payload.stageName,
-          workshopID: cmd.workshopId,
+          workshopId: cmd.workshopId,
         };
         enqueueOutbox({
           id: randomUUID(),
@@ -103,9 +103,9 @@ export class StageCompletionService {
 
           completedAt: isoNow(),
           eventName: 'AllStagesCompleted',
-          orderID: order.orderId,
+          orderId: order.orderId,
           schemaV: 1,
-          workshopID: cmd.workshopId,
+          workshopId: cmd.workshopId,
         };
         enqueueOutbox({
           id: randomUUID(),
@@ -174,10 +174,10 @@ export class StageCompletionService {
           commissionerId: order.commissionerId,
         confirmedAt: isoNow(),
         eventName: 'StageConfirmed',
-        orderID: order.orderId,
+        orderId: order.orderId,
         schemaV: 1,
         stageName: cmd.payload.stageName,
-        workshopID: cmd.workshopId,
+        workshopId: cmd.workshopId,
       };
       enqueueOutbox({
         id: randomUUID(),
@@ -198,8 +198,8 @@ export class StageCompletionService {
           completedAt: isoNow(),
           schemaV: 1,
           eventName: 'AllStagesCompleted',
-          orderID: order.orderId,
-          workshopID: cmd.workshopId,
+          orderId: order.orderId,
+          workshopId: cmd.workshopId,
         };
         enqueueOutbox({
           id: randomUUID(),

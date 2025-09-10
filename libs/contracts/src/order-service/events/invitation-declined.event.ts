@@ -18,11 +18,11 @@ export class InvitationDeclinedEventV1
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   @IsNotEmpty()
-  workshopID!: string;
+  workshopId!: string;
 
   @Equals(1)
   schemaV!: 1;

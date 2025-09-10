@@ -20,7 +20,7 @@ export class WorkshopInvitationTrackerConsumer {
   @EventPattern(KafkaTopics.InvitationDeclined)
   @UsePipes(new ValidationPipe(validator))
   async handleDeclined(@Payload() payload: InvitationDeclinedEventV1) {
-    await this.tracker.handleResponse(payload.orderID, true);
+    await this.tracker.handleResponse(payload.orderId, true);
   }
 
   @UseInterceptors(LoggingInterceptor)
@@ -33,6 +33,6 @@ export class WorkshopInvitationTrackerConsumer {
       return;
     }
 
-    await this.tracker.handleResponse(payload['orderID'] as string, false);
+    await this.tracker.handleResponse(payload['orderId'] as string, false);
   }
 }

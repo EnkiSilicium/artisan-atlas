@@ -68,7 +68,7 @@ export class OrderInitService {
         eventId: randomUUID(),
         eventName: 'OrderPlaced',
         commissionerId: cmd.payload.commissionerId,
-        orderID: order.orderId,
+        orderId: order.orderId,
         placedAt: order.createdAt,
         request: {
           title: request.title,

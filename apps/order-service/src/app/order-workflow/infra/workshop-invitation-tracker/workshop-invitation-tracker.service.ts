@@ -64,7 +64,7 @@ export class WorkshopInvitationTracker {
       const allRes: AllResponsesReceivedEventV1 = {
         eventId: randomUUID(),
         eventName: 'AllResponsesReceived',
-        orderID: orderId,
+        orderId: orderId,
         commissionerId: tracker.commissionerId,
         schemaV: 1,
         receivedAt: isoNow(),
@@ -75,7 +75,7 @@ export class WorkshopInvitationTracker {
         const allDecl: AllInvitationsDeclinedEventV1 = {
           eventId: randomUUID(),
           eventName: 'AllInvitationsDeclined',
-          orderID: orderId,
+          orderId: orderId,
           commissionerId: tracker.commissionerId,
           schemaV: 1,
           declinedAt: isoNow(),

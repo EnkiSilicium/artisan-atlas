@@ -75,10 +75,10 @@ export class WorkshopInvitationResponseService {
         commissionerId: order.commissionerId,
         eventName: 'InvitationAccepted',
         acceptedAt: isoNow(),
-        orderID: order.orderId,
+        orderId: order.orderId,
         aggregateVersion: order.version,
         schemaV: 1,
-        workshopID: cmd.workshopId,
+        workshopId: cmd.workshopId,
       };
       enqueueOutbox({
         id: randomUUID(),
@@ -116,10 +116,10 @@ export class WorkshopInvitationResponseService {
         commissionerId: order.commissionerId,
         eventName: 'InvitationConfirmed',
         confirmedAt: isoNow(),
-        orderID: order.orderId,
+        orderId: order.orderId,
         aggregateVersion: order.version,
         schemaV: 1,
-        workshopID: cmd.workshopId,
+        workshopId: cmd.workshopId,
       };
 
       enqueueOutbox({
@@ -164,9 +164,9 @@ export class WorkshopInvitationResponseService {
         commissionerId: order.commissionerId,
         eventName: 'InvitationDeclined',
         declinedAt: isoNow(),
-        orderID: order.orderId,
+        orderId: order.orderId,
         schemaV: 1,
-        workshopID: cmd.workshopId,
+        workshopId: cmd.workshopId,
       };
 
       enqueueOutbox({

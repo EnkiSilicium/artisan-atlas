@@ -14,7 +14,7 @@ export class WorkshopInvitationAcceptedEventV1
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -22,7 +22,7 @@ export class WorkshopInvitationAcceptedEventV1
 
   @IsString()
   @IsNotEmpty()
-  workshopID!: string;
+  workshopId!: string;
 
   @Equals(1)
   schemaV!: 1;

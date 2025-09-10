@@ -90,8 +90,9 @@ module.exports = async function () {
     );
   }
 
-  await new Promise((r) => setTimeout(r, 25_000))
-
+  console.log(`[E2E]: awaiting kafka...`)
+  await new Promise((r) => setTimeout(r, 30_000))
+  console.log(`[E2E]: start!`)
   // Spawn app with the correct env 
   const app = spawn('node', [entry], {
     env,

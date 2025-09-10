@@ -86,11 +86,11 @@ export class BonusEventDispatcher
     // Tolerate old casings so partitioning doesn't silently degrade
     return (
       (evt['orderId'] as string | undefined) ??
-      (evt['orderID'] as string | undefined) ??
+      (evt['orderId'] as string | undefined) ??
       (evt['commissionerId'] as string | undefined) ??
-      (evt['commissionerID'] as string | undefined) ??
+      (evt['commissionerId'] as string | undefined) ??
       (evt['workshopId'] as string | undefined) ??
-      (evt['workshopID'] as string | undefined) ??
+      (evt['workshopId'] as string | undefined) ??
       (evt['eventId'] as string | undefined) ??
       (evt['eventID'] as string | undefined) ??
       undefined

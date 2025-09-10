@@ -117,7 +117,7 @@ async function withConsumer<T>(
         value = undefined;
       }
       const evName = headers['x-event-name'];
-      const evOrderId = value?.orderId ?? value?.orderID;
+      const evOrderId = value?.orderId ?? value?.orderId;
       console.log(
         `[E2E][Kafka] ${topic} name=${evName ?? '-'} orderId=${evOrderId ?? '-'}`,
       );
@@ -210,7 +210,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       ],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {
@@ -304,7 +304,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       ],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {
@@ -494,7 +494,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       [String(KafkaTopics.OrderTransitions)],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {
@@ -587,7 +587,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       ],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {
@@ -674,7 +674,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       ],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {
@@ -756,7 +756,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
       ],
       ({ headers, value }) => {
         const name = headers['x-event-name'];
-        const vOrderId = value?.orderId ?? value?.orderID;
+        const vOrderId = value?.orderId ?? value?.orderId;
         if (name && vOrderId && vOrderId === orderId) seen.add(name);
       },
       async () => {

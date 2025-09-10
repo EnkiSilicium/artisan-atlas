@@ -22,7 +22,7 @@ export class OrderPlacedEventV1 implements BaseEvent<'OrderPlaced'> {
 
   @IsString()
   @IsNotEmpty()
-  orderID!: string;
+  orderId!: string;
 
   @IsString()
   @IsNotEmpty()
