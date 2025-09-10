@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ClientKafka, ClientProxy } from '@nestjs/microservices';
+import { MessageProducerPort } from 'adapter';
 import { InfraError } from 'error-handling/error-core';
 import { remapTypeOrmPgErrorToInfra } from 'error-handling/remapper/typeorm-postgres';
 import { BaseEvent } from 'libs/contracts/src/_common/base-event.event';
@@ -12,7 +14,7 @@ import {
   Propagation,
 } from 'libs/persistence/src/lib/interfaces/transaction-context.type';
 import { OutboxService } from 'libs/persistence/src/lib/services/schedule-outbox-publish.service';
-import { DataSource, QueryRunner } from 'typeorm';
+import { DataSource, In, QueryRunner } from 'typeorm';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 
 @Injectable()
@@ -20,7 +22,8 @@ export class TypeOrmUoW {
   constructor(
     private readonly ds: DataSource,
     private readonly publishJob: OutboxService,
-  ) {}
+    private readonly producer: MessageProducerPort<BaseEvent<string>>,
+  ) { }
 
   async run<T>(
     context: Partial<
@@ -92,33 +95,38 @@ export class TypeOrmUoW {
       //  afterCommit hooks (publish staged messages)
       if (store.outboxBuffer!.length) {
         const messageIds: string[] = store.outboxBuffer!.map((e) => e.id);
+        this.producer
+          .dispatch(rows.map((e) => e.payload))
+          .then((v) => {
 
-        await this.publishJob.enqueuePublish({
-          events: rows.map((r) => r.payload),
-          outboxIds: messageIds,
-        });
-        // this.kafka
-        //   .dispatch(rows.map((e) => e.payload))
-        //   .then((v) => {
+            // delete the events after they have been sent.
+            // if crashes before that, the startup sequence will try to publish-delete
+            // all unpublished
+            return this.ds.manager.delete(OutboxMessage, {
+              id: In(messageIds),
+            });
+          })
+          .catch(async (error) => {
+            //success of kafka publish should not be coupled to the success of transaction.
+            Logger.warn({
+              message: `Publish failed: ${error?.message ?? 'unknown reason'}, scheduling retry...`,
+              meta: { error, producer: (this.producer as any)?.name ?? 'unspecified'},
+            });
 
-        //     // delete the events after they have been sent.
-        //     // if crashes before that, the startup sequence will try to publish-delete
-        //     // all unpublished
-        //     return this.ds.manager.delete(OutboxMessage, {
-        //       id: In(messageIds),
-        //     });
-        //   })
-        //   .catch((error) => {
-        //     //success of kafka publish should not be coupled to the success of transaction.
-        //     Logger.warn({
-        //       message: `Kafka publish failed: ${error?.message ?? 'unkown reason'}, scheduling retry...`,
-        //       meta: { ...error },
-        //     });
-        //     this.publishJob.enqueuePublish({
-        //       events: rows.map(r => r.payload),
-        //       outboxIds: messageIds
-        //     })
-        //   });
+            try {
+              await this.publishJob.enqueuePublish({
+                events: rows.map(r => r.payload),
+                outboxIds: messageIds
+              })
+            } catch (error) {
+              Logger.error({
+                message: `Backup bullMQ publisher failed: ${(error as Error)?.message ?? 'unknown reason'}. Outbox messages will be dispatched on next restart or by the in-process job`,
+                meta: { error },
+              });
+
+            }
+
+          });
       }
 
       for (const cb of store.afterCommit!) await cb();
@@ -129,7 +137,7 @@ export class TypeOrmUoW {
       await qr.rollbackTransaction().catch(() => {
         Logger.warn({ message: `Transaction rollback failed!` });
       });
-      remapTypeOrmPgErrorToInfra(error);
+      remapTypeOrmPgErrorToInfra(error as Error);
     } finally {
       // todo: should consider restart mechanism for the service, or at least datasource.
       await qr.release().catch(() => {
@@ -155,7 +163,7 @@ export class TypeOrmUoW {
       if (error instanceof InfraError && error.retryable === true) {
         return await this.run(context, fn, opts);
       }
-      remapTypeOrmPgErrorToInfra(error);
+      remapTypeOrmPgErrorToInfra(error as Error);
     }
   }
 }
