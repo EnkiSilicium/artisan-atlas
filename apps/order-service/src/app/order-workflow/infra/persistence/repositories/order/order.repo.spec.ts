@@ -9,7 +9,7 @@ import { Stage } from 'apps/order-service/src/app/order-workflow/domain/entities
 import { WorkshopInvitation } from 'apps/order-service/src/app/order-workflow/domain/entities/workshop-invitation/workshop-invitation.entity';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
 import { InfraError, ProgrammerError } from 'error-handling/error-core';
-import { TypeOrmUoW, inRollbackedTestTx } from 'persistence';
+import { OutboxService, TypeOrmUoW, inRollbackedTestTx } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
@@ -54,7 +54,7 @@ describe('OrderRepo (integration)', () => {
         {
           provide: TypeOrmUoW,
           useFactory: (dataSource: DataSource, kafka: any) =>
-            new TypeOrmUoW(dataSource, kafka),
+            new TypeOrmUoW(ds, {} as OutboxService, kafka),
           inject: [DataSource, 'KAFKA_PUBLISHER'],
         },
       ],

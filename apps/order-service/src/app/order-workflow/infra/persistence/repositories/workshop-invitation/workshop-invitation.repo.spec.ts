@@ -63,7 +63,7 @@ describe('WorkshopInvitationRepo (integration)', () => {
         {
           provide: TypeOrmUoW,
           useFactory: (dataSource: DataSource, outbox: OutboxService) =>
-            new TypeOrmUoW(dataSource, outbox),
+            new TypeOrmUoW(dataSource, outbox, {} as any),
           inject: [DataSource, OutboxService],
         },
       ],

@@ -18,7 +18,7 @@ import { RequestRepo } from 'apps/order-service/src/app/order-workflow/infra/per
 import { StagesAggregateRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/stage/stage.repo';
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
 import { InfraError } from 'error-handling/error-core';
-import { TypeOrmUoW, requireTxManager, inRollbackedTestTx } from 'persistence';
+import { TypeOrmUoW, requireTxManager, inRollbackedTestTx, OutboxService } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
@@ -69,7 +69,7 @@ describe('StagesAggregateRepo (integration)', () => {
         {
           provide: TypeOrmUoW,
           useFactory: (dataSource: DataSource, kafka: any) =>
-            new TypeOrmUoW(dataSource, kafka),
+            new TypeOrmUoW(ds, {} as OutboxService, kafka),
           inject: [DataSource, 'KAFKA_PUBLISHER'],
         },
       ],

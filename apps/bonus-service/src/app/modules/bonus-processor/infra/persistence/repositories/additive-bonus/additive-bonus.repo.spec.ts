@@ -60,7 +60,7 @@ describe('AdditiveBonusRepo (integration)', () => {
         { provide: DataSource, useValue: ds },
         {
           provide: TypeOrmUoW,
-          useFactory: () => new TypeOrmUoW(ds, new KafkaMock() as any),
+          useFactory: () => new TypeOrmUoW(ds, new KafkaMock() as any, {} as any),
         },
       ],
     }).compile();

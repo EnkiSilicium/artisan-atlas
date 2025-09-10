@@ -2,7 +2,6 @@
 import { randomUUID } from 'crypto';
 
 import axios from 'axios';
-import { KafkaTopics } from 'contracts';
 import { Kafka, logLevel } from 'kafkajs';
 import { isoNow } from 'shared-kernel';
 

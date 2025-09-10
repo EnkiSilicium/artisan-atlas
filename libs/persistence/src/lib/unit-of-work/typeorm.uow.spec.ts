@@ -57,7 +57,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
     await ds.initialize();
 
     // TypeOrmUoW should be constructed with a Kafka port of BaseEvent<string>
-    uow = new TypeOrmUoW(ds, publishMock);
+    uow = new TypeOrmUoW(ds, publishMock, {} as any);
   });
 
   afterAll(async () => {
