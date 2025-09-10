@@ -33,7 +33,7 @@ export type KafkaFactoryOverrides = {
   aws?: AwsIamAuth;
 };
 
-export function makeKafkaConfigBundle(
+export function makeKafkaConfigFactory(
   input: KafkaFactoryInputs = {},
   overrides: KafkaFactoryOverrides = {},
 ): {
@@ -58,6 +58,11 @@ export function makeKafkaConfigBundle(
     ssl: overrides.aws?.ssl ?? true,
   };
 
+  const kafkaRetries = Number.parseInt(
+    extractStrEnvWithFallback(process.env.KAFKA_RETRIES, '8'),
+    10,
+  );
+
   const baseSasl: SASLOptions | undefined = aws.enabled
     ? {
         mechanism: 'aws',
@@ -78,6 +83,7 @@ export function makeKafkaConfigBundle(
     retry: {
       initialRetryTime: 300,
       factor: 2,
+      retries: kafkaRetries,
     },
     ...(aws.enabled ? { ssl: aws.ssl !== false, sasl: baseSasl } : {}),
     ...(overrides.client ?? {}),
@@ -98,9 +104,9 @@ export function makeKafkaConfigBundle(
     maxBytes: 5 * 1024 * 1024,
     minBytes: 1,
     maxWaitTimeInMs: 100,
-    retry: { retries: 8 },
+    retry: { retries: kafkaRetries },
     ...(overrides.consumer ?? {}),
-    
+
   };
 
   const producer: ProducerConfig = {
