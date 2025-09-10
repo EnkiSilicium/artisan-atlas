@@ -1,0 +1,361 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/bonus-read": {
+      "get": {
+        "description": "Returns a paginated list of bonus records with filters.",
+        "operationId": "BonusReadController_read",
+        "parameters": [
+          {
+            "name": "commissionerId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by commissioner ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "isVIP",
+            "required": false,
+            "in": "query",
+            "description": "Filter by VIP status",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "grade",
+            "required": false,
+            "in": "query",
+            "description": "Filter by grade",
+            "schema": {
+              "example": "gold",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minTotalPoints",
+            "required": false,
+            "in": "query",
+            "description": "Minimum total points",
+            "schema": {
+              "minimum": 0,
+              "example": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxTotalPoints",
+            "required": false,
+            "in": "query",
+            "description": "Maximum total points",
+            "schema": {
+              "minimum": 0,
+              "example": 1000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "vipPolicyVersion",
+            "required": false,
+            "in": "query",
+            "description": "VIP policy version number",
+            "schema": {
+              "minimum": 1,
+              "example": 2,
+              "type": "number"
+            }
+          },
+          {
+            "name": "bonusPolicyVersion",
+            "required": false,
+            "in": "query",
+            "description": "Bonus policy version number",
+            "schema": {
+              "minimum": 1,
+              "example": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "gradePolicyVersion",
+            "required": false,
+            "in": "query",
+            "description": "Grade policy version number",
+            "schema": {
+              "minimum": 1,
+              "example": 3,
+              "type": "number"
+            }
+          },
+          {
+            "name": "createdFrom",
+            "required": false,
+            "in": "query",
+            "description": "Show items created on or after this date",
+            "schema": {
+              "format": "date-time",
+              "example": "2024-01-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdTo",
+            "required": false,
+            "in": "query",
+            "description": "Show items created before this date",
+            "schema": {
+              "format": "date-time",
+              "example": "2024-12-31T23:59:59.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (default 50)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Offset into the result set (default 0)",
+            "schema": {
+              "minimum": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Field on which to sort (default vipLastUpdatedAt)",
+            "schema": {
+              "default": "vipLastUpdatedAt",
+              "example": "vipLastUpdatedAt",
+              "type": "string",
+              "enum": [
+                "vipCreatedAt",
+                "vipLastUpdatedAt",
+                "bonusLastUpdatedAt",
+                "totalPoints"
+              ]
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": false,
+            "in": "query",
+            "description": "Direction of the sort (default desc)",
+            "schema": {
+              "default": "desc",
+              "example": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BonusReadresultDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List VIP/additive bonus records",
+        "tags": [
+          "Bonus read"
+        ]
+      }
+    },
+    "/api/bonus-read/refresh": {
+      "post": {
+        "description": "Initiates an asynchronous refresh of the bonus read model.",
+        "operationId": "BonusReadController_refresh",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Refresh has been initiated"
+          }
+        },
+        "summary": "Refresh the bonus read projection",
+        "tags": [
+          "Bonus read"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Bonus Read API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "BonusReadFlatDto": {
+        "type": "object",
+        "properties": {
+          "commissionerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Commissioner ID"
+          },
+          "isVIP": {
+            "type": "boolean",
+            "description": "Whether the commissioner is currently VIP",
+            "example": true
+          },
+          "vipLastTickAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time of last VIP tick",
+            "example": "2024-01-10T10:00:00.000Z"
+          },
+          "vipLastBucket": {
+            "type": "number",
+            "description": "Latest VIP bucket index",
+            "example": 3
+          },
+          "vipPolicyVersion": {
+            "type": "number",
+            "description": "VIP policy version in effect",
+            "example": 2
+          },
+          "windowAlgoPolicyVersion": {
+            "type": "number",
+            "description": "Window algorithm policy version",
+            "example": 1
+          },
+          "vipBonusPolicyVersion": {
+            "type": "number",
+            "description": "Bonus policy version used for VIP",
+            "example": 5
+          },
+          "vipCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time the VIP status was created",
+            "example": "2023-12-01T00:00:00.000Z"
+          },
+          "vipLastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time the VIP status was last updated",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "totalPoints": {
+            "type": "number",
+            "description": "Total additive points",
+            "example": 1200
+          },
+          "grade": {
+            "type": "string",
+            "description": "Grade achieved",
+            "example": "gold"
+          },
+          "bonusPolicyVersion": {
+            "type": "number",
+            "description": "Bonus policy version for additive bonus",
+            "example": 5
+          },
+          "gradePolicyVersion": {
+            "type": "number",
+            "description": "Grade policy version in effect",
+            "example": 3
+          },
+          "bonusCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when bonus was created",
+            "example": "2023-12-01T00:00:00.000Z"
+          },
+          "bonusLastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when bonus was last updated",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "commissionerId",
+          "isVIP",
+          "vipLastTickAt",
+          "vipLastBucket",
+          "vipPolicyVersion",
+          "windowAlgoPolicyVersion",
+          "vipBonusPolicyVersion",
+          "vipCreatedAt",
+          "vipLastUpdatedAt",
+          "totalPoints",
+          "grade",
+          "bonusPolicyVersion",
+          "gradePolicyVersion",
+          "bonusCreatedAt",
+          "bonusLastUpdatedAt"
+        ]
+      },
+      "BonusReadresultDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total count across all pages",
+            "example": 1
+          },
+          "items": {
+            "description": "Returned items for this page",
+            "example": [
+              {
+                "commissionerId": "d3d94468-2f00-4b36-8c4f-7f6cbb1e4d3c",
+                "isVIP": true,
+                "vipLastTickAt": "2024-01-10T10:00:00.000Z",
+                "vipLastBucket": 3,
+                "vipPolicyVersion": 2,
+                "windowAlgoPolicyVersion": 1,
+                "vipBonusPolicyVersion": 5,
+                "vipCreatedAt": "2023-12-01T00:00:00.000Z",
+                "vipLastUpdatedAt": "2024-01-01T00:00:00.000Z",
+                "totalPoints": 1200,
+                "grade": "gold",
+                "bonusPolicyVersion": 5,
+                "gradePolicyVersion": 3,
+                "bonusCreatedAt": "2023-12-01T00:00:00.000Z",
+                "bonusLastUpdatedAt": "2024-01-01T00:00:00.000Z"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BonusReadFlatDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ]
+      }
+    }
+  }
+}

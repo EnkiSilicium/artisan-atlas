@@ -1,0 +1,430 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/orders/stages": {
+      "get": {
+        "description": "Returns a paginated list of stages with optional filters.",
+        "operationId": "OrderHistoryController_read",
+        "parameters": [
+          {
+            "name": "commissionerId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by commissioner ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderState",
+            "required": false,
+            "in": "query",
+            "description": "Filter by overall order state",
+            "schema": {
+              "example": "PendingCompletion",
+              "type": "string"
+            }
+          },
+          {
+            "name": "invitationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by invitation status",
+            "schema": {
+              "example": "pending",
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by stage status",
+            "schema": {
+              "example": "completed",
+              "type": "string"
+            }
+          },
+          {
+            "name": "workshopId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by workshop ID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderCreatedFrom",
+            "required": false,
+            "in": "query",
+            "description": "Restrict orders created after this timestamp",
+            "schema": {
+              "format": "date-time",
+              "example": "2024-01-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderCreatedTo",
+            "required": false,
+            "in": "query",
+            "description": "Restrict orders created before this timestamp",
+            "schema": {
+              "format": "date-time",
+              "example": "2024-12-31T23:59:59.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of rows to return (default 50)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 500,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Offset into the result set (default 0)",
+            "schema": {
+              "minimum": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Field on which to sort",
+            "schema": {
+              "default": "orderCreatedAt",
+              "example": "orderCreatedAt",
+              "type": "string",
+              "enum": [
+                "orderCreatedAt",
+                "orderLastUpdatedAt",
+                "stageOrder"
+              ]
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": false,
+            "in": "query",
+            "description": "Direction of the sort",
+            "schema": {
+              "default": "desc",
+              "example": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderHistoryQueryResultDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List order stages",
+        "tags": [
+          "Orders read"
+        ]
+      }
+    },
+    "/api/orders/stages/refresh": {
+      "post": {
+        "description": "Triggers an asynchronous refresh of the read projection.",
+        "operationId": "OrderHistoryController_refresh",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Refresh has been initiated"
+          }
+        },
+        "summary": "Refresh the read model",
+        "tags": [
+          "Orders read"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Order Read API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "Order workflow",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Paste: Bearer <your-JWT>"
+      }
+    },
+    "schemas": {
+      "OrderHistoryQueryResultFlatDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Order ID"
+          },
+          "orderState": {
+            "type": "string",
+            "description": "Current state of the order",
+            "example": "PendingCompletion"
+          },
+          "commissionerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Commissioner ID"
+          },
+          "isTerminated": {
+            "type": "boolean",
+            "description": "Whether the order has been terminated",
+            "example": false
+          },
+          "orderCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time the order was created",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "orderLastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time the order was last updated",
+            "example": "2024-02-01T00:00:00.000Z"
+          },
+          "requestTitle": {
+            "type": "string",
+            "description": "Request title",
+            "example": "Custom table"
+          },
+          "requestDescription": {
+            "type": "string",
+            "description": "Request description",
+            "example": "Build a custom wooden table"
+          },
+          "requestDeadline": {
+            "type": "string",
+            "description": "Request deadline",
+            "example": "2024-06-01T00:00:00.000Z"
+          },
+          "requestBudget": {
+            "type": "string",
+            "description": "Request budget",
+            "example": "within 2000 usd, 3000 usd abolute max"
+          },
+          "requestCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Request created timestamp",
+            "example": "2023-12-01T00:00:00.000Z"
+          },
+          "requestLastUpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Request updated timestamp",
+            "example": "2023-12-15T00:00:00.000Z"
+          },
+          "workshopId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Workshop ID, or null if none"
+          },
+          "invitationStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation status, or null if none",
+            "example": "pending"
+          },
+          "invitationDescription": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation description, or null if none",
+            "example": "Awaiting response"
+          },
+          "invitationDeadline": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation deadline, or null if none",
+            "example": "2024-05-01T00:00:00.000Z"
+          },
+          "invitationBudget": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation budget, or null if none",
+            "example": "2100"
+          },
+          "invitationCreatedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation created timestamp, or null",
+            "example": "2023-12-05T00:00:00.000Z"
+          },
+          "invitationLastUpdatedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Invitation updated timestamp, or null",
+            "example": "2023-12-10T00:00:00.000Z"
+          },
+          "stageName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the stage, or null",
+            "example": "Design"
+          },
+          "stageOrder": {
+            "type": "number",
+            "nullable": true,
+            "description": "Order index of the stage, or null",
+            "example": 0
+          },
+          "stageStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "Status of the stage, or null",
+            "example": "pending"
+          },
+          "approximateLength": {
+            "type": "string",
+            "nullable": true,
+            "description": "Approximate length, or null",
+            "example": "2 weeks"
+          },
+          "needsConfirmation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the stage requires confirmation, or null",
+            "example": true
+          },
+          "stageCreatedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stage created timestamp, or null",
+            "example": "2023-12-20T00:00:00.000Z"
+          },
+          "stageLastUpdatedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stage updated timestamp, or null",
+            "example": "2024-01-05T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "orderId",
+          "orderState",
+          "commissionerId",
+          "isTerminated",
+          "orderCreatedAt",
+          "orderLastUpdatedAt",
+          "requestTitle",
+          "requestDescription",
+          "requestDeadline",
+          "requestBudget",
+          "requestCreatedAt",
+          "requestLastUpdatedAt",
+          "workshopId",
+          "invitationStatus",
+          "invitationDescription",
+          "invitationDeadline",
+          "invitationBudget",
+          "invitationCreatedAt",
+          "invitationLastUpdatedAt",
+          "stageName",
+          "stageOrder",
+          "stageStatus",
+          "approximateLength",
+          "needsConfirmation",
+          "stageCreatedAt",
+          "stageLastUpdatedAt"
+        ]
+      },
+      "OrderHistoryQueryResultDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "Total count across all pages",
+            "example": 1
+          },
+          "items": {
+            "description": "Returned items for this page",
+            "example": [
+              {
+                "orderId": "a1b2c3d4-e5f6-7a89-b0c1-d2e3f4a5b6c7",
+                "orderState": "PendingCompletion",
+                "commissionerId": "c2d3e4f5-6789-0123-4567-89abcdef0123",
+                "isTerminated": false,
+                "orderCreatedAt": "2024-01-01T00:00:00.000Z",
+                "orderLastUpdatedAt": "2024-02-01T00:00:00.000Z",
+                "requestTitle": "Custom table",
+                "requestDescription": "Build a custom wooden table",
+                "requestDeadline": "2024-06-01T00:00:00.000Z",
+                "requestBudget": "2000",
+                "requestCreatedAt": "2023-12-01T00:00:00.000Z",
+                "requestLastUpdatedAt": "2023-12-15T00:00:00.000Z",
+                "workshopId": "b7c8d9e0-f1a2-3b45-c6d7-e8f9a0b1c2d3",
+                "invitationStatus": "pending",
+                "invitationDescription": "Awaiting response",
+                "invitationDeadline": "2024-05-01T00:00:00.000Z",
+                "invitationBudget": "2100",
+                "invitationCreatedAt": "2023-12-05T00:00:00.000Z",
+                "invitationLastUpdatedAt": "2023-12-10T00:00:00.000Z",
+                "stageName": "Design",
+                "stageOrder": 0,
+                "stageStatus": "pending",
+                "approximateLength": "2 weeks",
+                "needsConfirmation": true,
+                "stageCreatedAt": "2023-12-20T00:00:00.000Z",
+                "stageLastUpdatedAt": "2024-01-05T00:00:00.000Z"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderHistoryQueryResultFlatDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ]
+      }
+    }
+  }
+}
