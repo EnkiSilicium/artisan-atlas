@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MQ_CLIENT, MessageProducerPort } from 'adapter';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { MockController } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/http/mock-controller';
 import { BonusEventsConsumer } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/messaging/bonus-events.consumer';
 import { BonusEventDispatcher } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka-producer';
@@ -31,7 +31,7 @@ import {
   TypeOrmUoW,
 } from 'persistence';
 import { extractBoolEnv } from 'shared-kernel';
-import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 
 @Module({
   imports: [
@@ -66,12 +66,12 @@ import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
     ClientsModule.register([
       extractBoolEnv(process.env.USE_REDIS_MQ)
         ? {
-            name: MQ_CLIENT,
+            name: MQ_PRODUCER,
             transport: Transport.REDIS,
             options: redisConfig(),
           }
         : {
-            name: MQ_CLIENT,
+            name: MQ_PRODUCER,
             transport: Transport.KAFKA,
             options: {
               client: bonusProcessorKafkaConfig.client,

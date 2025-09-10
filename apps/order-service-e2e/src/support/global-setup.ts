@@ -77,7 +77,9 @@ module.exports = async function () {
     READ_BASE_URL: `http://127.0.0.1:${READ_PORT}`,
     NODE_ENV: 'development',
     DISABLE_AUTH: 'true',
+    USE_REDIS_MQ: 'false',
     JWT_PUBLIC_KEY: `MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDtN+d1VO2TopWYkmRBXyMe98xMYbRdhw6NR5TgHngnTPm4n6qusTNWMaRmwOFKoAT905V3odVSCx7BcWe0FU2Y3/DQKZkFSaj0J8HF3WX2Im23zDKGlQvRm8g+2jdYKTrTxFqRxTJMoElWTTMIdGUcUo0a4jio1l4aFs9PxatumQIDAQAB`
+  
   };
 
   // Built entry

@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { bonusProcessorKafkaConfig } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/kafka.config';
-import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 import { BonusProcessorModule } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/di/bonus-processor.module';
 import { BonusReadModule } from 'apps/bonus-service/src/app/modules/read-projection/infra/di/bonus-read.module';
 import { ApiPaths } from 'contracts';
@@ -36,7 +36,7 @@ function setupSwagger(
 }
 
 async function startBonusProcessorApp() {
-  const httpPort = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3001);
+  const httpPort = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3003);
 
   const app = await NestFactory.create(BonusProcessorModule, {
     bufferLogs: true,
@@ -84,7 +84,7 @@ async function startBonusProcessorApp() {
 }
 
 async function startBonusReadApp() {
-  const httpPort = Number(process.env.BONUS_READ_HTTP_PORT ?? 3002);
+  const httpPort = Number(process.env.BONUS_READ_HTTP_PORT ?? 3004);
 
   const app = await NestFactory.create(BonusReadModule, { bufferLogs: true });
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));

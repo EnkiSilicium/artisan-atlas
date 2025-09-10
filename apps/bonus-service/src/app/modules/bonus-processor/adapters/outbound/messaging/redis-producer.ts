@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { MQ_CLIENT, MessageProducerPort } from 'adapter';
-import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka-topic-map';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
+import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
 import { BonusEventInstanceUnion } from 'contracts';
 import { ProgrammerError } from 'error-handling/error-core';
 import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
@@ -14,7 +14,7 @@ export class BonusEventRedisDispatcher
 {
   private readonly logger = new Logger(BonusEventRedisDispatcher.name);
 
-  constructor(@Inject(MQ_CLIENT) private readonly client: ClientProxy) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientProxy) {}
 
   async onModuleInit() {
     await this.client.connect();

@@ -76,12 +76,12 @@ export function makeKafkaConfigBundle(
       extractStrEnvWithFallback(process.env.KAFKA_CLIENT_ID, 'order-service'),
     logLevel: logLevel.INFO,
     retry: {
-      retries: 8,
       initialRetryTime: 300,
       factor: 2,
     },
     ...(aws.enabled ? { ssl: aws.ssl !== false, sasl: baseSasl } : {}),
     ...(overrides.client ?? {}),
+
   };
 
   const consumer: ConsumerConfig = {
@@ -100,6 +100,7 @@ export function makeKafkaConfigBundle(
     maxWaitTimeInMs: 100,
     retry: { retries: 8 },
     ...(overrides.consumer ?? {}),
+    
   };
 
   const producer: ProducerConfig = {

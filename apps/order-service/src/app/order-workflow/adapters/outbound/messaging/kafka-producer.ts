@@ -7,7 +7,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { MQ_CLIENT } from 'adapter'; // token bound to ClientKafka
+import { MQ_PRODUCER } from 'adapter'; // token bound to ClientKafka
 import { MessageProducerPort } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
 import { OrderEventInstanceUnion } from 'contracts';
@@ -25,7 +25,7 @@ export class OrderEventDispatcher
 {
   private readonly logger = new Logger(OrderEventDispatcher.name);
 
-  constructor(@Inject(MQ_CLIENT) private readonly client: ClientKafka) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientKafka) {}
 
   async onModuleInit() {
     // ClientKafka needs an explicit connect in app code (Nest won't auto-connect producers)

@@ -1,1 +1,1 @@
-export const MQ_CLIENT = 'MQ_CLIENT';
+export const MQ_PRODUCER = 'MQ_PRODUCER';

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { MQ_CLIENT, MessageProducerPort } from 'adapter';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
 import { OrderEventInstanceUnion } from 'contracts';
 import { ProgrammerError } from 'error-handling/error-core';
@@ -14,11 +14,11 @@ export class OrderEventRedisDispatcher
 {
   private readonly logger = new Logger(OrderEventRedisDispatcher.name);
 
-  constructor(@Inject(MQ_CLIENT) private readonly client: ClientProxy) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientProxy) {}
 
   async onModuleInit() {
     await this.client.connect();
-    this.logger.log('Redis client connected');
+    this.logger.warn({message: `Redis producer enabled - this mode is not intended for production environment!`});
   }
 
   async onModuleDestroy() {
@@ -32,13 +32,13 @@ export class OrderEventRedisDispatcher
   async dispatch(events: OrderEventInstanceUnion[]): Promise<void> {
     if (!events.length) return;
 
-    const ops = events.map(async (evt) => {
+    const promise = events.map(async (evt) => {
       const topic = this.topicFor(evt);
       const obs = this.client.emit(topic, evt);
       await lastValueFrom(obs.pipe(defaultIfEmpty(undefined)));
     });
 
-    await Promise.all(ops);
+    await Promise.all(promise);
     this.logger.log({ message: `Emitted ${events.length} event(s) via Redis` });
   }
 

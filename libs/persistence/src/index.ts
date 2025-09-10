@@ -9,7 +9,6 @@ export * from './lib/helpers/transaction.helper';
 export * from './lib/interfaces/entity-techncials.interface';
 export * from './lib/interfaces/transaction-context.type';
 export * from './lib/services/schedule-outbox-publish.service';
-export * from '../../adapter/src/lib/outbound/messaging/kafka-producer.token';
 export * from './lib/transformers/iso-date-transformer';
 export * from './lib/transformers/numeric-string-transformer';
 export * from './lib/unit-of-work/typeorm.uow';

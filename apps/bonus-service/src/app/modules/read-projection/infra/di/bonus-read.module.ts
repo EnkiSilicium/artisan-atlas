@@ -49,7 +49,7 @@ import { LoggingInterceptor } from 'observability';
 
     // ClientsModule.register([
     //     {
-    //         name: MQ_CLIENT,
+    //         name: MQ_PRODUCER,
     //         transport: Transport.KAFKA,
     //         options: {
     //             client: bonusReadKafkaConfig.client,

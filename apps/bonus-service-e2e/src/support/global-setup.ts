@@ -70,6 +70,8 @@ module.exports = async function () {
     REDIS_PORT,
     REDIS_URL: `redis://${REDIS_HOST}:${REDIS_PORT}`,
 
+    USE_REDIS_MQ: 'false',
+
     // App HTTP
     BONUS_PROC_HTTP_PORT: String(PROC_PORT),
     BONUS_READ_HTTP_PORT: String(READ_PORT),
