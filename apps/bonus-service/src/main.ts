@@ -18,6 +18,8 @@ import { extractBoolEnv } from 'shared-kernel';
 
 import type { INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
+import { join } from 'path';
+import { mkdirSync, writeFileSync } from 'fs';
 
 function setupSwagger(
   app: INestApplication,
@@ -33,6 +35,14 @@ function setupSwagger(
     .build();
   const doc = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(path, app, doc, { customSiteTitle: title });
+
+  
+  if (process.argv.includes('--emit-openapi')) {
+    const outDir = join(process.cwd(), 'openapi');
+    mkdirSync(outDir, { recursive: true });
+    const jsonPath = join(outDir, `${title}.${version}.json`);
+    writeFileSync(jsonPath, JSON.stringify(document, null, 2));
+  }
 }
 
 async function startBonusProcessorApp() {
@@ -54,14 +64,14 @@ async function startBonusProcessorApp() {
   const microserviceOptions: MicroserviceOptions = useRedisMq
     ? { transport: Transport.REDIS, options: redisConfig() }
     : {
-        transport: Transport.KAFKA,
-        options: {
-          client: bonusProcessorKafkaConfig.client,
-          consumer: bonusProcessorKafkaConfig.consumer,
-          producer: bonusProcessorKafkaConfig.producer,
-          run: bonusProcessorKafkaConfig.run,
-        },
-      };
+      transport: Transport.KAFKA,
+      options: {
+        client: bonusProcessorKafkaConfig.client,
+        consumer: bonusProcessorKafkaConfig.consumer,
+        producer: bonusProcessorKafkaConfig.producer,
+        run: bonusProcessorKafkaConfig.run,
+      },
+    };
   const microservice = app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
   microservice.useGlobalInterceptors(
     ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
@@ -114,7 +124,7 @@ async function bootstrap() {
 
   // Graceful shutdown on signals
   const shutdown = async (signal: string) => {
-    console.warn({message: `\nReceived ${signal}. Shutting down...}`});
+    console.warn({ message: `\nReceived ${signal}. Shutting down...}` });
     process.exit(0);
   };
   process.on('SIGINT', () => shutdown('SIGINT'));

@@ -18,6 +18,8 @@ import { extractBoolEnv } from 'shared-kernel';
 
 import { Logger, type INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
+import { mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 function setupSwagger(
   app: INestApplication,
@@ -43,8 +45,16 @@ function setupSwagger(
       'JWT',
     )
     .build();
-  const doc = SwaggerModule.createDocument(app, config);
+  const doc = SwaggerModule.createDocument(app, config,);
   SwaggerModule.setup(path, app, doc, { customSiteTitle: title });
+
+
+  if (process.argv.includes('--emit-openapi-only')) {
+    const outDir = join(process.cwd(), 'openapi');
+    mkdirSync(outDir, { recursive: true });
+    const jsonPath = join(outDir, `${title}.${version}.json`);
+    writeFileSync(jsonPath, JSON.stringify(document, null, 2));
+  }
 }
 
 async function startOrderWorkflowApp() {
@@ -140,7 +150,7 @@ async function bootstrap() {
   process.on('unhandledRejection', (reason, promise) => {
     Logger.error({
       message: `Uncaught promise rejection: ${reason}"}`,
-      cause: { reason, promise}
+      cause: { reason, promise }
     })
 
   });
