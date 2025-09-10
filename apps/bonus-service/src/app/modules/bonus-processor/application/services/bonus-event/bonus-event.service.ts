@@ -82,6 +82,7 @@ export class BonusEventService {
 
       if (vipGained) {
         const vipGainedPayload: VipAccquiredEventV1 = {
+          eventId: randomUUID(),
           eventName: 'VipAccquired',
           accquiredAt: isoNow(),
           commissionerId: vipProfile.commissionerId,
@@ -98,6 +99,7 @@ export class BonusEventService {
 
       if (gradeChanged) {
         const gradeAttainedPayload: GradeAttainedEventV1 = {
+          eventId: randomUUID(),
           eventName: 'GradeAttained',
           attainedAt: isoNow(),
           commissionerId: vipProfile.commissionerId,

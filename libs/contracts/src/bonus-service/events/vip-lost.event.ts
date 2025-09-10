@@ -8,6 +8,10 @@ export class VipLostEventV1 implements BaseEvent<'VipLost'> {
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   commissionerId!: string;
 
   @Equals(1)

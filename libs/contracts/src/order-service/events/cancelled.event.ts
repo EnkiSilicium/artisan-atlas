@@ -14,6 +14,10 @@ export class CancelledEventV1 implements BaseEvent<'Cancelled'> {
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   orderID!: string;
 
   @IsString()
