@@ -27,8 +27,7 @@ export class BonusEventsConsumer {
     @Payload() payload: object,
     @Ctx() ctx: KafkaContext,
   ) {
-    const eventId = getHashId(payload);
-    await this.route({ ...payload, eventId }, ctx);
+    await this.route(payload, ctx);
   }
 
   @EventPattern(KafkaTopics.StageTransitions)

@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { KafkaProducerPort } from 'adapter';
 import {
@@ -60,6 +62,7 @@ export class WorkshopInvitationTracker {
       const events: OrderEventInstanceUnion[] = [];
 
       const allRes: AllResponsesReceivedEventV1 = {
+        eventId: randomUUID(),
         eventName: 'AllResponsesReceived',
         orderID: orderId,
         commissionerId: tracker.commissionerId,
@@ -70,6 +73,7 @@ export class WorkshopInvitationTracker {
 
       if (tracker.declines >= tracker.total) {
         const allDecl: AllInvitationsDeclinedEventV1 = {
+          eventId: randomUUID(),
           eventName: 'AllInvitationsDeclined',
           orderID: orderId,
           commissionerId: tracker.commissionerId,
