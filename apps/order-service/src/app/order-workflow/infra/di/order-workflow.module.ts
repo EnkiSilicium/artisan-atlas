@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MQ_CLIENT, MessageProducerPort } from 'adapter';
+import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { OrderComfirmCompletionController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order-confirm-completion.controller';
 import { OrderInitController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order-init.controller';
 import { OrderCancelController } from 'apps/order-service/src/app/order-workflow/adapters/inbound/http/order.cancel.controller';
@@ -52,12 +52,12 @@ import {
 } from 'persistence';
 import { extractBoolEnv } from 'shared-kernel';
 import {AUTH_GUARD} from 'auth'
-import { RedisModule } from '../../../../infra/redis/redis.module';
-import { RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
+import { RedisModule } from './redis.module';
+import { InMemoryRequestControlRepository, RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
 import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
 import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
 import { requestCooldownConfig } from '../config/request-cooldown.config';
-import { redisConfig } from 'apps/order-service/src/infra/config/redis.config.js';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 
 @Module({
   imports: [
@@ -87,12 +87,12 @@ import { redisConfig } from 'apps/order-service/src/infra/config/redis.config.js
     ClientsModule.register([
       extractBoolEnv(process.env.USE_REDIS_MQ)
         ? {
-            name: MQ_CLIENT,
+            name: MQ_PRODUCER,
             transport: Transport.REDIS,
             options: redisConfig(),
           }
         : {
-            name: MQ_CLIENT,
+            name: MQ_PRODUCER,
             transport: Transport.KAFKA,
             options: {
               client: orderWorkflowKafkaConfig.client,
@@ -133,11 +133,14 @@ import { redisConfig } from 'apps/order-service/src/infra/config/redis.config.js
     OrderCancelService,
 
     RequestControlRepository,
+    InMemoryRequestControlRepository,
     RequestCooldownGuard,
     {
       provide: REQUEST_COOLDOWN_CONFIG,
       useValue: requestCooldownConfig(),
     },
+
+    
 
     OutboxProcessor,
     OutboxService,
