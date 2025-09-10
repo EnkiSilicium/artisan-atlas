@@ -7,6 +7,6 @@ export abstract class VipProfileRegistryInterface {
 //No need to store all of those in the code, only the latest - there will be no "replay"
 export const VipProfileRegistry: VipProfileRegistryInterface = {
   policyName: 'VipProfileRegistry',
-  vipThreshold: 1000,
+  vipThreshold: 200,
   version: 1,
 };

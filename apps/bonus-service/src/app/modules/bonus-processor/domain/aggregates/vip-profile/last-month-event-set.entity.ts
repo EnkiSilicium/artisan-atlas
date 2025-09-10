@@ -70,7 +70,6 @@ export class LastMonthEventSet implements EntityTechnicalsInterface {
   @OneToOne(() => BonusEventEntity, { eager: false, onDelete: 'CASCADE' })
   @JoinColumn([
     { name: 'event_id', referencedColumnName: 'eventId' },
-    { name: 'commissioner_id', referencedColumnName: 'commissionerId' },
   ])
   event!: BonusEventEntity;
 

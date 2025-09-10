@@ -50,7 +50,6 @@ import {
   )
   `,
 )
-@Index('ix_workshopInvitation_order_status', ['orderId', 'status'])
 @Index('ix_workshopInvitation_workshop', ['workshopId'])
 @Entity({ name: 'workshop_invitation' })
 export class WorkshopInvitation implements EntityTechnicalsInterface {

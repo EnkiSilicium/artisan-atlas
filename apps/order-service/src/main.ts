@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { orderWorkflowKafkaConfig } from 'apps/order-service/src/app/order-workflow/infra/config/kafka.config';
-import { redisConfig } from 'apps/order-service/src/infra/config/redis.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 import { OrderWorkflowModule } from 'apps/order-service/src/app/order-workflow/infra/di/order-workflow.module';
 import { OrderReadModule } from 'apps/order-service/src/app/read-model/infra/di/order-read.module';
 import { ApiPaths } from 'contracts';
@@ -16,7 +16,7 @@ import { LoggingInterceptor } from 'observability';
 import { otelSDK } from 'observability';
 import { extractBoolEnv } from 'shared-kernel';
 
-import type { INestApplication } from '@nestjs/common';
+import { Logger, type INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
 
 function setupSwagger(
@@ -66,14 +66,14 @@ async function startOrderWorkflowApp() {
   const microserviceOptions: MicroserviceOptions = useRedisMq
     ? { transport: Transport.REDIS, options: redisConfig() }
     : {
-        transport: Transport.KAFKA,
-        options: {
-          client: orderWorkflowKafkaConfig.client,
-          consumer: orderWorkflowKafkaConfig.consumer,
-          producer: orderWorkflowKafkaConfig.producer,
-          run: orderWorkflowKafkaConfig.run,
-        },
-      };
+      transport: Transport.KAFKA,
+      options: {
+        client: orderWorkflowKafkaConfig.client,
+        consumer: orderWorkflowKafkaConfig.consumer,
+        producer: orderWorkflowKafkaConfig.producer,
+        run: orderWorkflowKafkaConfig.run,
+      },
+    };
   const microservice = app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
   if (!useRedisMq) {
     microservice.useGlobalInterceptors(app.get(KafkaErrorInterceptor), app.get(LoggingInterceptor));
@@ -126,9 +126,25 @@ async function bootstrap() {
 
   // Graceful shutdown on signals
   const shutdown = async (signal: string) => {
-    console.warn({message: `\nReceived ${signal}. Shutting down...}`});
+    console.warn({ message: `\nReceived ${signal}. Shutting down...}` });
     process.exit(0);
   };
+
+  process.on('uncaughtException', (error) => {
+    Logger.error({
+      message: `Uncaught exception: ${error?.message ?? "unknown error"}`,
+      cause: { ...error }
+    })
+  })
+
+  process.on('unhandledRejection', (reason, promise) => {
+    Logger.error({
+      message: `Uncaught promise rejection: ${reason}"}`,
+      cause: { reason, promise}
+    })
+
+  });
+
 
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));

@@ -30,9 +30,9 @@ import type { BonusEventName } from 'apps/bonus-service/src/app/modules/bonus-pr
 //Index for per-user temporal queries
 @Index('ix_bonus_event_comm_created', ['commissionerId', 'createdAt'])
 //Exists here for LastMonthEventSet's composite FK"
-@Index('uq_bonus_event_composite', ['eventId', 'commissionerId'], {
-  unique: true,
-})
+// @Index('uq_bonus_event_composite', ['eventId', 'commissionerId'], {
+//   unique: true,
+// })
 @Check(`char_length("event_name") >= 1`)
 @Entity({ name: 'bonus_event' })
 export class BonusEventEntity implements EntityTechnicalsInterface {
@@ -44,7 +44,7 @@ export class BonusEventEntity implements EntityTechnicalsInterface {
   commissionerId!: string;
 
   /**
-   * Time of event firing, not DB addition.
+   * Time of injestion into the service.
    */
   //@IsISO8601()
   @Column({

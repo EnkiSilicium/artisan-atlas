@@ -4,6 +4,7 @@ import { Controller, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/c
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { BonusEventService } from 'apps/bonus-service/src/app/modules/bonus-processor/application/services/bonus-event/bonus-event.service';
 import { KafkaTopics } from 'contracts';
+import type {BaseEvent} from 'contracts'
 import { assertsCanBeBonusEvent } from '../assertions/asserts-can-be-bonus-event.assertion';
 import { LoggingInterceptor } from 'observability';
 import { validator } from 'adapter';
@@ -17,14 +18,13 @@ export class BonusEventsConsumer {
   @UseInterceptors(LoggingInterceptor)
   @EventPattern(KafkaTopics.OrderTransitions)
   @UsePipes(new ValidationPipe(validator))
-  async onOrderTransitions(@Payload() payload: object) {
-    const eventId = getHashId(payload);
-    await this.route({ ...payload, eventId });
+  async onOrderTransitions(@Payload() payload: BaseEvent<string>) {
+    await this.route({ ...payload });
   }
 
   @EventPattern(KafkaTopics.StageTransitions)
   @UsePipes(new ValidationPipe(validator))
-  async onStageTransitions(@Payload() payload: object) {
+  async onStageTransitions(@Payload() payload: BaseEvent<string>) {
     await this.route(payload);
   }
 
@@ -32,9 +32,14 @@ export class BonusEventsConsumer {
 
     
 
-  private async route(event: unknown): Promise<void> {
+  private async route(event: BaseEvent<string>): Promise<void> {
     assertIsObject(event);
     assertsCanBeBonusEvent(event);
+    const hashKey = {
+      commissionerId: event.commissionerId,
+      eventName: event.eventName,
+      
+    }
     const eventId = (event['eventId'] as string | undefined) ?? getHashId(event);
     const { eventName, commissionerId } = event;
     const injestedAt = isoNow();
@@ -49,7 +54,7 @@ export class BonusEventsConsumer {
   }
 }
 
-export function getHashId(payload: unknown): string {
+export function getHashId(payload: BaseEvent<string> & {commissionerId: string}): string {
   return createHash('sha256')
     .update(JSON.stringify({ payload }))
     .digest('base64url')

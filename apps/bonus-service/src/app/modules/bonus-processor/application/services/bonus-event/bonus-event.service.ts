@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BonusEventProcessCommand } from 'apps/bonus-service/src/app/modules/bonus-processor/application/services/bonus-event/bonus-event.command';
 import { AdditiveBonus } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/additive-bonus/additive-bonus.entity';
 import { GradePolicy } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/additive-bonus/grade.policy';
@@ -79,6 +79,15 @@ export class BonusEventService {
       await this.vipProfileRepo.update(vipProfile);
 
       await this.additiveBonusRepo.update(additiveBonusProfile);
+
+      Logger.verbose({
+        message: `Finished processing ${event.eventName}`,
+        meta: {
+          vipGained,
+          gradeChanged,
+          grade: additiveBonusProfile.grade
+        }
+      })
 
       if (vipGained) {
         const vipGainedPayload: VipAccquiredEventV1 = {

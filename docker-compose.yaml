@@ -1,5 +1,4 @@
 services:
-
   redis:
     image: redis:latest
     container_name: redis
@@ -7,7 +6,6 @@ services:
       - "6379:6379"
     volumes:
       - ./rdata:/data
-
 
     
   postgres:
