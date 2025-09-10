@@ -64,6 +64,7 @@ module.exports = async function () {
     KAFKA_BOOTSTRAP: bootstrap,
     KAFKA_BROKER_HOSTNAME: bootstrap.split(':')[0],
     KAFKA_BROKER_PORT: bootstrap.split(':')[1],
+    KAFKA_RETRIES: '100',
 
     // Redis 
     REDIS_HOST,
@@ -116,6 +117,7 @@ module.exports = async function () {
   process.env.REDIS_HOST = env.REDIS_HOST;
   process.env.REDIS_PORT = env.REDIS_PORT;
   process.env.REDIS_URL = env.REDIS_URL;
+  process.env.KAFKA_RETRIES = env.KAFKA_RETRIES;
 
   console.log(`[E2E] Kafka bootstrap: ${env.KAFKA_BOOTSTRAP}`);
   console.log(`[E2E] Redis: ${env.REDIS_URL}`);
