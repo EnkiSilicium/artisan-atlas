@@ -212,6 +212,6 @@ describe('Bonus processor integration (Option B)', () => {
     console.log(`[E2E] Final Read API response: ${JSON.stringify(res.data)}`);
     expect(res?.data?.total)?.toBeGreaterThan(0);
     expect((res?.data?.items[0] as BonusReadFlatDto).totalPoints).toBeGreaterThan(0);
-    expect((res?.data?.items[0] as BonusReadFlatDto).).toBeGreaterThan(0);
+    expect((res?.data?.items[0] as BonusReadFlatDto)).toBeGreaterThan(0);
   }, 180_000);
 });
