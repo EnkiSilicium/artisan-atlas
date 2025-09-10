@@ -13,6 +13,11 @@ export class AllInvitationsDeclinedEventV1
   @ApiProperty({ type: String })
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @ApiProperty({ type: String })
+  @IsString()
+  @IsNotEmpty()
   orderID!: string;
 
   @ApiProperty({ type: String })

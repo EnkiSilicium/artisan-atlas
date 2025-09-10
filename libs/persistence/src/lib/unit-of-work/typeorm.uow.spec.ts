@@ -74,7 +74,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
 
     const msg: OutboxMessage<BaseEvent<string>> = {
       id: randomUUID(),
-      payload: { eventName: 'test' as const, schemaV: 1 },
+      payload: { eventId: randomUUID(), eventName: 'test' as const, schemaV: 1 },
       createdAt: isoNow(),
     } as any;
 
@@ -84,6 +84,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
   it('commit path: persists outbox within tx, publishes BaseEvent after commit, then deletes', async () => {
     const id = randomUUID();
     const payload: BaseEvent<'orderUpdated'> = {
+      eventId: randomUUID(),
       eventName: 'orderUpdated',
       schemaV: 1,
     };
@@ -118,9 +119,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
     const enqueuePublished: BaseEvent<string>[] = (
       publishMock.enqueuePublish as jest.Mock
     ).mock.calls[0][0];
-    expect(enqueuePublished).toEqual([
-      { eventName: 'orderUpdated', schemaV: 1 },
-    ]);
+    expect(enqueuePublished).toEqual([payload]);
 
     // we saw exactly one persisted row before commit
     expect(seenInsideTx).toBe(1);
@@ -132,6 +131,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
 
   it('rollback path: no rows remain, nothing published', async () => {
     const payload: BaseEvent<'rollbackMe'> = {
+      eventId: randomUUID(),
       eventName: 'rollbackMe',
       schemaV: 1,
     };
@@ -157,8 +157,16 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
     const id1 = randomUUID();
     const id2 = randomUUID();
 
-    const evA: BaseEvent<'batchA'> = { eventName: 'batchA', schemaV: 1 };
-    const evB: BaseEvent<'batchB'> = { eventName: 'batchB', schemaV: 1 };
+    const evA: BaseEvent<'batchA'> = {
+      eventId: randomUUID(),
+      eventName: 'batchA',
+      schemaV: 1,
+    };
+    const evB: BaseEvent<'batchB'> = {
+      eventId: randomUUID(),
+      eventName: 'batchB',
+      schemaV: 1,
+    };
 
     await uow.run({}, async () => {
       enqueueOutbox({ id: id1, payload: evA, createdAt: isoNow() });
@@ -175,7 +183,10 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
     // order isn’t guaranteed; assert by set of eventNames and schemaV presence
     const names = new Set(batch.map((b) => b.eventName));
     expect(names).toEqual(new Set(['batchA', 'batchB']));
-    batch.forEach((b) => expect(b.schemaV).toBe(1));
+    batch.forEach((b) => {
+      expect(b.schemaV).toBe(1);
+      expect(typeof b.eventId).toBe('string');
+    });
 
     const rows = await ds.manager.find(OutboxMessage);
     expect(rows.length).toBe(0);
@@ -183,7 +194,11 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
 
   it('runWithRetry retries exactly once on InfraError:TX_CONFLICT and then publishes BaseEvent', async () => {
     const id = randomUUID();
-    const ev: BaseEvent<'afterRetry'> = { eventName: 'afterRetry', schemaV: 1 };
+    const ev: BaseEvent<'afterRetry'> = {
+      eventId: randomUUID(),
+      eventName: 'afterRetry',
+      schemaV: 1,
+    };
 
     let attempts = 0;
 
@@ -201,7 +216,7 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
     expect(publishMock.enqueuePublish).toHaveBeenCalledTimes(1);
     const sent: BaseEvent<string>[] = (publishMock.enqueuePublish as jest.Mock)
       .mock.calls[0][0];
-    expect(sent).toEqual([{ eventName: 'afterRetry', schemaV: 1 }]);
+    expect(sent).toEqual([ev]);
 
     const rows = await ds.manager.find(OutboxMessage);
     expect(rows.length).toBe(0);

@@ -10,6 +10,10 @@ export class AllResponsesReceivedEventV1
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   orderID!: string;
 
   @IsString()

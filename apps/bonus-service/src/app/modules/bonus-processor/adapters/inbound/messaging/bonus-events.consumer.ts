@@ -35,13 +35,8 @@ export class BonusEventsConsumer {
   private async route(event: BaseEvent<string>): Promise<void> {
     assertIsObject(event);
     assertsCanBeBonusEvent(event);
-    const hashKey = {
-      commissionerId: event.commissionerId,
-      eventName: event.eventName,
-      
-    }
-    const eventId = (event['eventId'] as string | undefined) ?? getHashId(event);
-    const { eventName, commissionerId } = event;
+   
+    const { eventName, commissionerId, eventId } = event;
     const injestedAt = isoNow();
 
     await this.bonusService.process({
@@ -54,9 +49,3 @@ export class BonusEventsConsumer {
   }
 }
 
-export function getHashId(payload: BaseEvent<string> & {commissionerId: string}): string {
-  return createHash('sha256')
-    .update(JSON.stringify({ payload }))
-    .digest('base64url')
-    .slice(0, 10);
-}

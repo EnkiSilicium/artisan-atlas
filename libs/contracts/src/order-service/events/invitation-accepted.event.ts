@@ -16,6 +16,10 @@ export class InvitationAcceptedEventV1
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   commissionerId!: string;
 
   @IsString()

@@ -8,6 +8,10 @@ export class StageConfirmedEventV1 implements BaseEvent<'StageConfirmed'> {
 
   @IsString()
   @IsNotEmpty()
+  eventId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   orderID!: string;
 
   @IsString()

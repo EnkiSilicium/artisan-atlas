@@ -34,6 +34,7 @@ export class OrderComfirmCompletionService {
       await this.orderRepo.update(order);
 
       const eventPayload: OrderCompletedV1 = {
+        eventId: randomUUID(),
         eventName: 'OrderCompleted',
         orderId: order.orderId,
         schemaV: 1,
