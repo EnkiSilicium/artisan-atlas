@@ -31,25 +31,7 @@ import {
   OneToMany,
 } from 'typeorm';
 
-//  - pending|declined -> description, deadline, budget are NULL
-@Check(
-  'chk_workshopInvitation_payload_by_status',
-  `
-  (
-    "status" IN ('${WorkshopInvitationStatus.Accepted}', '${WorkshopInvitationStatus.Confirmed}')
-    AND description IS NOT NULL
-    AND deadline IS NOT NULL
-    AND budget IS NOT NULL
-  )
-  OR
-  (
-    "status" IN ('${WorkshopInvitationStatus.Pending}', '${WorkshopInvitationStatus.Declined}')
-    AND description IS NULL
-    AND deadline IS NULL
-    AND budget IS NULL
-  )
-  `,
-)
+
 @Index('ix_workshopInvitation_workshop', ['workshopId'])
 @Entity({ name: 'workshop_invitation' })
 export class WorkshopInvitation implements EntityTechnicalsInterface {

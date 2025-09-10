@@ -3,10 +3,8 @@ import { BonusEventService } from "apps/bonus-service/src/app/modules/bonus-proc
 import { HttpErrorInterceptor } from "error-handling/interceptor";
 import { LoggingInterceptor } from "observability";
 import { assertIsObject, isoNow } from "shared-kernel";
-import { http } from "winston";
 import { validator } from 'adapter';
 import { BonusEventName } from "apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/common/bonus-event.registy";
-import { getHashId } from "apps/bonus-service/src/app/modules/bonus-processor/adapters/inbound/messaging/bonus-events.consumer";
 import type { BaseEvent } from "contracts";
 
 @Controller('mock')
