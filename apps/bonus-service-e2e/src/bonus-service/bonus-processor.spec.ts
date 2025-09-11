@@ -1,13 +1,15 @@
 import { randomUUID } from 'crypto';
 
 import axios from 'axios';
-
-import { ApiPaths, BonusReadFlatDto, BonusReadPaths, KafkaTopics, OrderCompletedEventV1, OrderPlacedEventV1 } from 'contracts';
-
+import { ApiPaths, BonusReadPaths, KafkaTopics } from 'contracts';
 import { Kafka } from 'kafkajs';
-
 import { isoNow } from 'shared-kernel';
 
+import type {
+  BonusReadFlatDto,
+  OrderCompletedEventV1,
+  OrderPlacedEventV1,
+} from 'contracts';
 import type { Producer } from 'kafkajs';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -66,12 +68,10 @@ describe('Bonus processor integration (Option B)', () => {
     await pollUntil(
       async () => {
         try {
-
           await axios.get(
             `${readBaseUrl}/${ApiPaths.Root}/${BonusReadPaths.Root}`,
             { params: { limit: 1, offset: 0 } },
           );
-
 
           return true;
         } catch {
@@ -169,7 +169,6 @@ describe('Bonus processor integration (Option B)', () => {
     await pollUntil(
       async () => {
         const refresh = await axios.post(
-
           `${readBaseUrl}/${ApiPaths.Root}/${BonusReadPaths.Root}/${BonusReadPaths.Refresh}`,
 
           {
@@ -199,19 +198,20 @@ describe('Bonus processor integration (Option B)', () => {
       { timeoutMs: 90_000, intervalMs: 600 },
     );
 
-
     const res = await axios.get(
       `${readBaseUrl}/${ApiPaths.Root}/${BonusReadPaths.Root}`,
       {
         params: { commissionerId, limit: 1, offset: 0 },
       },
     );
-    {
-    }
 
     console.log(`[E2E] Final Read API response: ${JSON.stringify(res.data)}`);
     expect(res?.data?.total)?.toBeGreaterThan(0);
-    expect((res?.data?.items[0] as BonusReadFlatDto).totalPoints).toBeGreaterThan(0);
-    expect((res?.data?.items[0] as BonusReadFlatDto).totalPoints).toBeGreaterThan(0);
+    expect(
+      (res?.data?.items[0] as BonusReadFlatDto).totalPoints,
+    ).toBeGreaterThan(0);
+    expect(
+      (res?.data?.items[0] as BonusReadFlatDto).totalPoints,
+    ).toBeGreaterThan(0);
   }, 180_000);
 });

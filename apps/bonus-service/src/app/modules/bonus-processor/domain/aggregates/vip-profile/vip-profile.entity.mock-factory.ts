@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { randomUUID } from 'crypto';
 
 import { isoNow } from 'shared-kernel';

@@ -25,9 +25,10 @@ import { WorkshopInvitationEditService } from 'apps/order-service/src/app/order-
 import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.service';
 import { MockAuthGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/mock-auth.guard';
 import { OrderHttpJwtGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/order-http-jwt.guard';
-import { JwtStrategy } from 'apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
+import { JwtStrategy } from 'apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy';
 import { orderWorkflowKafkaConfig } from 'apps/order-service/src/app/order-workflow/infra/config/kafka.config';
+import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 import { OrderWorkflowTypeOrmOptions } from 'apps/order-service/src/app/order-workflow/infra/config/typeorm-config';
 import { orderWorkflowWinstonConfig } from 'apps/order-service/src/app/order-workflow/infra/config/winston.config';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
@@ -35,6 +36,7 @@ import { RequestRepo } from 'apps/order-service/src/app/order-workflow/infra/per
 import { StagesAggregateRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/stage/stage.repo';
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
 import { WorkshopInvitationTracker } from 'apps/order-service/src/app/order-workflow/infra/workshop-invitation-tracker/workshop-invitation-tracker.service';
+import { AUTH_GUARD } from 'auth';
 import {
   HttpErrorInterceptor,
   HttpErrorInterceptorOptions,
@@ -51,13 +53,15 @@ import {
   TypeOrmUoW,
 } from 'persistence';
 import { extractBoolEnv } from 'shared-kernel';
-import {AUTH_GUARD} from 'auth'
+
 import { RedisModule } from './redis.module';
-import { InMemoryRequestControlRepository, RequestControlRepository } from '../auth/request-cooldown/request-control.repository';
 import { RequestCooldownGuard } from '../auth/guards/request-cooldown.guard';
+import {
+  InMemoryRequestControlRepository,
+  RequestControlRepository,
+} from '../auth/request-cooldown/request-control.repository';
 import { REQUEST_COOLDOWN_CONFIG } from '../auth/request-cooldown/request-cooldown-config.token';
 import { requestCooldownConfig } from '../config/request-cooldown.config';
-import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 
 @Module({
   imports: [
@@ -87,20 +91,20 @@ import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/con
     ClientsModule.register([
       extractBoolEnv(process.env.USE_REDIS_MQ)
         ? {
-            name: MQ_PRODUCER,
-            transport: Transport.REDIS,
-            options: redisConfig(),
-          }
+          name: MQ_PRODUCER,
+          transport: Transport.REDIS,
+          options: redisConfig(),
+        }
         : {
-            name: MQ_PRODUCER,
-            transport: Transport.KAFKA,
-            options: {
-              client: orderWorkflowKafkaConfig.client,
-              producer: orderWorkflowKafkaConfig.producer,
-              run: orderWorkflowKafkaConfig.run,
-              consumer: orderWorkflowKafkaConfig.consumer,
-            },
+          name: MQ_PRODUCER,
+          transport: Transport.KAFKA,
+          options: {
+            client: orderWorkflowKafkaConfig.client,
+            producer: orderWorkflowKafkaConfig.producer,
+            run: orderWorkflowKafkaConfig.run,
+            consumer: orderWorkflowKafkaConfig.consumer,
           },
+        },
     ]),
 
     ...(extractBoolEnv(process.env.DISABLE_AUTH)
@@ -108,9 +112,7 @@ import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/con
       : [PassportModule.register({ defaultStrategy: 'jwt', session: false })]),
 
     WinstonModule.forRoot({
-      transports: [
-        orderWorkflowWinstonConfig.transports.consoleTransport,
-      ],
+      transports: [orderWorkflowWinstonConfig.transports.consoleTransport],
     }),
     RedisModule,
   ],
@@ -140,11 +142,17 @@ import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/con
       useValue: requestCooldownConfig(),
     },
 
-    
-
     OutboxProcessor,
     OutboxService,
     TypeOrmUoW,
+
+    KafkaErrorInterceptor,
+    {
+      provide: KafkaErrorInterceptorOptions,
+      useValue: {
+        maxRetries: 5,
+      },
+    },
 
     RequestRepo,
     OrderRepo,
@@ -192,13 +200,13 @@ import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/con
     ...(extractBoolEnv(process.env.USE_REDIS_MQ)
       ? []
       : [
-          {
-            provide: KafkaErrorInterceptorOptions,
-            useValue: {
-              maxRetries: 5,
-            },
+        {
+          provide: KafkaErrorInterceptorOptions,
+          useValue: {
+            maxRetries: 5,
           },
-        ]),
+        },
+      ]),
   ],
 })
 export class OrderWorkflowModule { }

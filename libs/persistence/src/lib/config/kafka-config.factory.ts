@@ -87,7 +87,6 @@ export function makeKafkaConfigFactory(
     },
     ...(aws.enabled ? { ssl: aws.ssl !== false, sasl: baseSasl } : {}),
     ...(overrides.client ?? {}),
-
   };
 
   const consumer: ConsumerConfig = {
@@ -107,7 +106,6 @@ export function makeKafkaConfigFactory(
     allowAutoTopicCreation: true,
     retry: { retries: kafkaRetries },
     ...(overrides.consumer ?? {}),
-
   };
 
   const producer: ProducerConfig = {
@@ -116,6 +114,7 @@ export function makeKafkaConfigFactory(
     ...(overrides.producer ?? {}),
   };
 
+  // eslint-disable-next-line
   const cpu = Math.max(1, Math.floor(require('os').cpus().length / 2));
   const run: ConsumerRunConfig = {
     autoCommit: false,

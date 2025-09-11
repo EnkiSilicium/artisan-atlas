@@ -1,5 +1,5 @@
 import { otelTraceLogFormatter } from 'libs/observability/src/lib/formatters/otel-trace-log.formatter';
-import { extractBoolEnv, extractStrEnvWithFallback } from 'shared-kernel';
+import { extractBoolEnv } from 'shared-kernel';
 import * as winston from 'winston';
 
 export type LoggerFactoryOverrides = {
@@ -16,7 +16,6 @@ export function makeWinstonOptions(overrides: LoggerFactoryOverrides = {}) {
   const level =
     overrides.level ??
     (extractBoolEnv(process.env.DEBUG) ? 'debug' : 'verbose');
-
 
   const serviceName = overrides.serviceName ?? 'order-service';
 
@@ -42,8 +41,6 @@ export function makeWinstonOptions(overrides: LoggerFactoryOverrides = {}) {
     level,
     format: production ? prodFormat : devFormat,
   });
-
-
 
   return {
     transports: { consoleTransport },

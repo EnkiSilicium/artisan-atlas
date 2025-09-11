@@ -74,7 +74,7 @@ export class StageCompletionService {
       });
 
       if (stageCompleted) {
-       const stageConfirmedEventPayload: StageConfirmedEventV1 = {
+        const stageConfirmedEventPayload: StageConfirmedEventV1 = {
           eventId: randomUUID(),
           commissionerId: order.commissionerId,
           confirmedAt: isoNow(),
@@ -97,7 +97,7 @@ export class StageCompletionService {
         order.markAsCompleted();
         await this.ordersRepo.update(order);
 
-       const allStageConfirmedEventPayload: AllStagesCompletedEventV1 = {
+        const allStageConfirmedEventPayload: AllStagesCompletedEventV1 = {
           eventId: randomUUID(),
           commissionerId: order.commissionerId,
 
@@ -115,7 +115,7 @@ export class StageCompletionService {
           },
         });
 
-       const oprderMarkedAsCompleted: OrderMarkedAsCompletedEventV1 = {
+        const oprderMarkedAsCompleted: OrderMarkedAsCompletedEventV1 = {
           eventId: randomUUID(),
           eventName: 'OrderMarkedAsCompleted',
           commissionerId: order.commissionerId,
@@ -169,9 +169,9 @@ export class StageCompletionService {
 
       await this.stagesAggregateRepo.save(stages);
 
-       const stageConfirmedEventPayload: StageConfirmedEventV1 = {
-          eventId: randomUUID(),
-          commissionerId: order.commissionerId,
+      const stageConfirmedEventPayload: StageConfirmedEventV1 = {
+        eventId: randomUUID(),
+        commissionerId: order.commissionerId,
         confirmedAt: isoNow(),
         eventName: 'StageConfirmed',
         orderId: order.orderId,
@@ -192,7 +192,7 @@ export class StageCompletionService {
 
         await this.ordersRepo.update(order);
 
-       const allStagedCompletedEventPayload: AllStagesCompletedEventV1 = {
+        const allStagedCompletedEventPayload: AllStagesCompletedEventV1 = {
           eventId: randomUUID(),
           commissionerId: order.commissionerId,
           completedAt: isoNow(),
@@ -209,7 +209,7 @@ export class StageCompletionService {
           },
         });
 
-       const oprderMarkedAsCompleted: OrderMarkedAsCompletedEventV1 = {
+        const oprderMarkedAsCompleted: OrderMarkedAsCompletedEventV1 = {
           eventId: randomUUID(),
           eventName: 'OrderMarkedAsCompleted',
           commissionerId: order.commissionerId,

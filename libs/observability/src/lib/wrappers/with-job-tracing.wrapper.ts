@@ -20,7 +20,11 @@ import type { Job } from 'bullmq';
  * Hardcoded: tracer 'bullmq-worker', span name = job.name, kind = CONSUMER.
  */
 export function WithJobTracing(name: string | undefined): MethodDecorator {
-  return (_target: Object, _key: string | symbol, descriptor: PropertyDescriptor) => {
+  return (
+    _target: object,
+    _key: string | symbol,
+    descriptor: PropertyDescriptor,
+  ) => {
     const original: (...args: any[]) => any = descriptor.value;
 
     descriptor.value = async function wrapped(job: Job, ...args: any[]) {

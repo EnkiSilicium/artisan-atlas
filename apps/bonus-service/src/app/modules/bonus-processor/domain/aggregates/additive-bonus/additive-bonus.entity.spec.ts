@@ -16,11 +16,6 @@ import type {
 } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/common/bonus-event.registy';
 import type { DomainError } from 'error-handling/error-core';
 
-const uuid = (n = 1) =>
-  `${String(n).padStart(8, '0')}-1111-4111-8111-11111111111${n}`;
-
-//
-// DO NOT change it!
 /**
  * Decouple the grade names from tests and mock getGradeByPoints
  * @warning coupled to tests - change carefully

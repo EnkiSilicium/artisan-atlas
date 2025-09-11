@@ -9,12 +9,13 @@ import { Stage } from 'apps/order-service/src/app/order-workflow/domain/entities
 import { WorkshopInvitation } from 'apps/order-service/src/app/order-workflow/domain/entities/workshop-invitation/workshop-invitation.entity';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
 import { InfraError, ProgrammerError } from 'error-handling/error-core';
-import { OutboxService, TypeOrmUoW, inRollbackedTestTx } from 'persistence';
+import { TypeOrmUoW, inRollbackedTestTx } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { MessageProducerPort } from 'adapter';
+import type { OutboxService } from 'persistence';
 
 describe('OrderRepo (integration)', () => {
   let moduleRef: TestingModule;

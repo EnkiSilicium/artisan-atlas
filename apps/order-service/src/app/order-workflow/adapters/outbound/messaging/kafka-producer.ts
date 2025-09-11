@@ -9,9 +9,9 @@ import {
 import { ClientKafka } from '@nestjs/microservices';
 import { MQ_PRODUCER } from 'adapter'; // token bound to ClientKafka
 import { MessageProducerPort } from 'adapter';
+import { assertTopicMappingDefined } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
 import { OrderEventInstanceUnion } from 'contracts';
-import { assertTopicMappingDefined } from 'adapter';
 import { lastValueFrom } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
 import { assertIsObject } from 'shared-kernel';

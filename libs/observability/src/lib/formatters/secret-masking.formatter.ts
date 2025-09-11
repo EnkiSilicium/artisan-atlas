@@ -39,7 +39,6 @@ export function makeRedactFormat(paths: string[], keep = 2) {
 }
 
 export const REDACTION_PATHS = [
-
   'KEY',
   'password',
   'pass',

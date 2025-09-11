@@ -1,3 +1,4 @@
+/* eslint-disable */
 import 'reflect-metadata';
 import { VipProfile } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity';
 import {

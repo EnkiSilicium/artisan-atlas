@@ -125,7 +125,7 @@ export class AdditiveBonus implements EntityTechnicalsInterface {
     const eventInfo = BonusEventRegistry.registry[eventName];
     const bonusAmount = eventInfo.bonusAmount;
 
-    const oldPoints = this.totalPoints;
+    //const oldPoints = this.totalPoints;
     const newPoints = this.totalPoints + bonusAmount;
 
     const oldGrade = this.grade;

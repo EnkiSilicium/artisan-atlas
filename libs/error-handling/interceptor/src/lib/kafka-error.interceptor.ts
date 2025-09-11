@@ -8,9 +8,12 @@ import {
   Inject,
 } from '@nestjs/common';
 import { ClientKafka, KafkaContext } from '@nestjs/microservices';
+import {
+  Consumer,
+  KafkaMessage,
+} from '@nestjs/microservices/external/kafka.interface.js';
 import { MQ_PRODUCER } from 'adapter';
 import { AppError } from 'error-handling/error-core';
-
 // Your error base + concrete types
 import { DomainError } from 'error-handling/error-core';
 import { InfraError } from 'error-handling/error-core';
@@ -22,6 +25,7 @@ import {
   map,
   ignoreElements,
   defaultIfEmpty,
+  concatMap,
 } from 'rxjs/operators';
 
 export class KafkaErrorInterceptorOptions {
@@ -61,14 +65,23 @@ export class KafkaErrorInterceptor implements NestInterceptor {
     // Only handle Kafka (RPC) traffic; let HTTP go through the HTTP pipeline.
     if (context.getType() !== 'rpc') return next.handle();
 
-    const kafkaCtx = context.switchToRpc().getContext<KafkaContext>();
-    const message = kafkaCtx.getMessage();
+    const kafkaCtx: KafkaContext = context
+      .switchToRpc()
+      .getContext<KafkaContext>();
+
+    if(typeof kafkaCtx.getTopic !== "function") {
+      Logger.warn({
+        message: `Context is not a kafka context - ${KafkaErrorInterceptor.name} disabled`
+      })
+      return next.handle().pipe()
+    }
+
+
+    const message: KafkaMessage = kafkaCtx.getMessage();
     //Logger.log({ event: inspect(message) })
-    const topic = kafkaCtx.getTopic();
-    const partition = kafkaCtx.getPartition();
-    // Nest versions differ: prefer method, fallback to property.
-    const consumer =
-      (kafkaCtx as any).getConsumer?.() ?? (kafkaCtx as any).consumer;
+    const topic: string = kafkaCtx.getTopic();
+    const partition: number = kafkaCtx.getPartition();
+    const consumer: Consumer = kafkaCtx.getConsumer();
 
     const currentOffset = BigInt(message.offset);
     const nextOffset = (currentOffset + 1n).toString();
@@ -87,7 +100,7 @@ export class KafkaErrorInterceptor implements NestInterceptor {
           undefined,
           KafkaErrorInterceptor.name,
         );
-        Logger.log({ message: 'KafkaErrorInterceptor handling' });
+        Logger.debug({ message: 'KafkaErrorInterceptor handling' });
 
         const attempts = this.getAttempts(message);
         const max = this.opts.maxRetries ?? 5;
@@ -106,23 +119,22 @@ export class KafkaErrorInterceptor implements NestInterceptor {
         }
 
         // Not retryable, or we exhausted attempts → DLQ then commit.
-        const act = async () => {
-          try {
-            await this.sendToDlq(topic, message, appErr, error);
-          } catch (dlqErr) {
-            // If DLQ publishing fails, DO NOT commit; let redelivery retry DLQ.
-            Logger.error(
-              { ...(dlqErr as any) },
-              undefined,
-              'KafkaErrorInterceptor.DLQ',
-            );
-            throw error; // propagate so message remains uncommitted
-          }
-          await this.commit(consumer, topic, partition, nextOffset);
-        };
 
         return from(this.sendToDlq(topic, message, appErr, error)).pipe(
           // emit a single value so lastValueFrom has something to resolve
+          concatMap(() =>
+            from(this.commit(consumer, topic, partition, nextOffset)).pipe(
+              // Commit failed → log and rethrow the *original* error so the message stays uncommitted
+              catchError((commitErr) => {
+                Logger.error(
+                  { commitErr },
+                  undefined,
+                  'KafkaErrorInterceptor.Commit',
+                );
+                return throwError(() => error);
+              }),
+            ),
+          ),
           map(() => undefined as void),
           catchError((dlqErr) => {
             Logger.error({ dlqErr }, undefined, 'KafkaErrorInterceptor.DLQ');
@@ -160,23 +172,34 @@ export class KafkaErrorInterceptor implements NestInterceptor {
    */
   private async sendToDlq(
     topic: string,
-    originalmessage: any,
+    originalMessage: any,
     appErr: AppError | undefined,
     unknownErr: unknown,
   ): Promise<void> {
+    Logger.verbose({
+      message: `Rerouting message to DLQ`,
+      details: {
+        topic,
+        originalMessage
+      }
+    })
+
+
+
+
     const dlqTopic = `${topic}${this.dlqSuffix}`;
     const summary = this.buildErrorSummary(appErr, unknownErr);
 
     const obs = this.dlqProducer.emit(dlqTopic, {
-      key: originalmessage.key,
+      key: originalMessage.key,
       headers: {
-        ...originalmessage.headers,
+        ...originalMessage.headers,
         'x-error-kind': summary.kind,
         'x-error-service': summary.service,
         'x-error-code': summary.code,
       },
       value: {
-        original: originalmessage.value,
+        original: originalMessage.value,
         error: summary,
       },
     });
@@ -209,7 +232,7 @@ export class KafkaErrorInterceptor implements NestInterceptor {
       };
     }
 
-    // Unknown error: keep it compact but useful.
+    // Unknown error.
     const message =
       typeof unknownErr === 'object' &&
       unknownErr !== null &&

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Injectable } from '@nestjs/common';
 import { WorkshopPort } from 'apps/order-service/src/app/order-workflow/application/ports/workshop.port';
 

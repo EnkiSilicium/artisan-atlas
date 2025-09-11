@@ -39,10 +39,10 @@ export function assertValid<
     throw new DomainError({
       errorObject: errorRegistry.byCode.VALIDATION,
       details: {
-        message: `Domain validation of ${(instance as any)?.name ?? 'unspecified entity'} rejected the values.`
+        message: `Domain validation of ${(instance as any)?.name ?? 'unspecified entity'} rejected the values.`,
       },
       cause: {
-        ...errors
+        ...errors,
       },
     });
   }

@@ -23,7 +23,7 @@ export class BonusEventService {
     private readonly additiveBonusRepo: AdditiveBonusRepo,
     private readonly bonusEventRepo: BonusEventRepo,
     private readonly vipProfileRepo: VipProfileRepo,
-  ) { }
+  ) {}
   async process(cmd: BonusEventProcessCommand) {
     return this.uow.runWithRetry({}, async () => {
       let additiveBonusProfile: AdditiveBonus | null =
@@ -46,12 +46,12 @@ export class BonusEventService {
           injestedAt: cmd.injestedAt,
           eventName: cmd.eventName,
         });
-      } catch (error) {
+      } catch (error: unknown) {
         Logger.warn({
           message: `Event ${cmd.eventName} is not a bonus event by the current policy v.${BonusEventRegistry.version}.`,
-          details: {eligibleEvents: BonusEventRegistry.registry},
-          cause: error
-        })
+          details: { eligibleEvents: BonusEventRegistry.registry },
+          cause: error,
+        });
         return;
       }
 
@@ -96,9 +96,9 @@ export class BonusEventService {
         meta: {
           vipGained,
           gradeChanged,
-          grade: additiveBonusProfile.grade
-        }
-      })
+          grade: additiveBonusProfile.grade,
+        },
+      });
 
       if (vipGained) {
         const vipGainedPayload: VipAccquiredEventV1 = {

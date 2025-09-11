@@ -2,11 +2,11 @@ import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
-import { BonusReadHandler } from '../../application/bonus-read/bonus-read.query-handler';
 import {
   BONUS_READ_REFRESH_JOB,
   BONUS_READ_REFRESH_QUEUE,
 } from './bonus-read-refresh.token';
+import { BonusReadHandler } from '../../application/bonus-read/bonus-read.query-handler';
 
 @Processor(BONUS_READ_REFRESH_QUEUE)
 export class BonusReadRefreshWorker extends WorkerHost implements OnModuleInit {
@@ -30,9 +30,9 @@ export class BonusReadRefreshWorker extends WorkerHost implements OnModuleInit {
   }
 
   async process(): Promise<void> {
+    await this.service.refresh();
     Logger.verbose({
       message: `Worker: read projection refreshed!`,
     });
-    await this.service.refresh();
   }
 }

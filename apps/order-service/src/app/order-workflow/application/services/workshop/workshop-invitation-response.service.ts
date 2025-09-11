@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { Injectable } from '@nestjs/common';
+import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion';
 import {
   AcceptWorkshopInvitationCommand,
   DeclineWorkshopInvitationCommand,
@@ -27,7 +28,6 @@ import {
 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
-import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion';
 
 @Injectable()
 export class WorkshopInvitationResponseService {
@@ -62,8 +62,7 @@ export class WorkshopInvitationResponseService {
         ? new StagesAggregate(cmd.payload.stages)
         : new StagesAggregate([stageDefault]);
 
-
-      assertIsStillPendingInvitations(order)
+      assertIsStillPendingInvitations(order);
 
       workshopInvitation.accept(cmd.payload);
 

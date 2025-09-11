@@ -1,15 +1,11 @@
 // common/app-logging.interceptor.ts
-import {
-  Injectable,
-  NestInterceptor,
-  Logger,
-} from '@nestjs/common';
-import type {ExecutionContext, CallHandler} from '@nestjs/common'
+import { Injectable, NestInterceptor, Logger } from '@nestjs/common';
 import { KafkaContext } from '@nestjs/microservices';
+import { Span } from 'nestjs-otel';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { Span } from 'nestjs-otel';
 
+import type { ExecutionContext, CallHandler } from '@nestjs/common';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {

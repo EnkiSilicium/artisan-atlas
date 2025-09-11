@@ -1,6 +1,7 @@
+import { assertValidErrorRegistryDefs } from './assert-valid-error-registry-defs.assertion';
+
 import type { BaseDescriptor } from 'error-handling/error-core';
 import type { ErrorRegistryInterface } from 'error-handling/error-core';
-import { assertValidErrorRegistryDefs } from './assert-valid-error-registry-defs.assertion';
 
 /**
  * Build a closed, non-extendable registry for a single service and kind.

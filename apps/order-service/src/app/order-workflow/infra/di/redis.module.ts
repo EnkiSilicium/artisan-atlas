@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS } from 'persistence';
+
 import { redisConfig } from '../config/redis.config';
 
 @Module({
