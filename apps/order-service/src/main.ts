@@ -12,7 +12,7 @@ import {
   KafkaErrorInterceptor,
 } from 'error-handling/interceptor';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { LoggingInterceptor } from 'observability';
+import { LoggingInterceptor, printEnvs } from 'observability';
 import { otelSDK } from 'observability';
 import { extractBoolEnv } from 'shared-kernel';
 
@@ -20,42 +20,21 @@ import { Logger, type INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
-
-function setupSwagger(
-  app: INestApplication,
-  {
-    title,
-    version = '1.0.0',
-    path = '../docs',
-  }: { title: string; version?: string; path?: string },
-) {
-  const config = new DocumentBuilder()
-    .setTitle(title)
-    .setVersion(version)
-    .addTag('Order workflow')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        in: 'header',
-        name: 'Authorization',
-        description: 'Paste: Bearer <your-JWT>',
-      },
-      'JWT',
-    )
-    .build();
-  const doc = SwaggerModule.createDocument(app, config,);
-  SwaggerModule.setup(path, app, doc, { customSiteTitle: title });
+import { setupSwagger } from 'adapter';
 
 
-  if (process.argv.includes('--emit-openapi-only')) {
-    const outDir = join(process.cwd(), 'openapi');
-    mkdirSync(outDir, { recursive: true });
-    const jsonPath = join(outDir, `${title}.${version}.json`);
-    writeFileSync(jsonPath, JSON.stringify(document, null, 2));
-  }
+export function printOrderServiceEnvs(): void {
+  printEnvs("order-service", [
+    { env: process.env.ORDER_WRKFLOW_HTTP_PORT, description: "ORDER_WRKFLOW_HTTP_PORT: workflow HTTP port" },
+    { env: process.env.ORDER_READ_HTTP_PORT,   description: "ORDER_READ_HTTP_PORT: read HTTP port" },
+
+    { env: process.env.JWT_PUBLIC_KEY, description: "JWT_PUBLIC_KEY: PEM for verifying JWTs" },
+    { env: process.env.JWT_AUD,        description: "JWT_AUD: expected JWT audience" },
+    { env: process.env.JWT_ISS,        description: "JWT_ISS: expected JWT issuer" },
+    { env: process.env.DISABLE_AUTH,   description: "DISABLE_AUTH: disable auth (true/false)" },
+  ]);
 }
+
 
 async function startOrderWorkflowApp() {
   const httpPort = Number(process.env.ORDER_WRKFLOW_HTTP_PORT ?? 3001);
@@ -128,6 +107,9 @@ async function startOrderReadApp() {
 }
 
 async function bootstrap() {
+  
+  if(true) printOrderServiceEnvs()
+
   otelSDK.start();
 
   await startOrderWorkflowApp();

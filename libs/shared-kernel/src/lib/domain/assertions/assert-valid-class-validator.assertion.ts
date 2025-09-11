@@ -38,8 +38,11 @@ export function assertValid<
   if (errors.length) {
     throw new DomainError({
       errorObject: errorRegistry.byCode.VALIDATION,
+      details: {
+        message: `Domain validation of ${(instance as any)?.name ?? 'unspecified entity'} rejected the values.`
+      },
       cause: {
-        output: `Validation failed: ${JSON.stringify(errors, null, 2)}`,
+        ...errors
       },
     });
   }

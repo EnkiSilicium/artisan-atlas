@@ -104,6 +104,7 @@ export function makeKafkaConfigFactory(
     maxBytes: 5 * 1024 * 1024,
     minBytes: 1,
     maxWaitTimeInMs: 100,
+    allowAutoTopicCreation: true,
     retry: { retries: kafkaRetries },
     ...(overrides.consumer ?? {}),
 

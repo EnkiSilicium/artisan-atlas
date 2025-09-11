@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { bonusProcessorKafkaConfig } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/config/kafka.config';
 import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/config/redis.config';
 import { BonusProcessorModule } from 'apps/bonus-service/src/app/modules/bonus-processor/infra/di/bonus-processor.module';
@@ -12,38 +12,26 @@ import {
   KafkaErrorInterceptor,
 } from 'error-handling/interceptor';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { LoggingInterceptor } from 'observability';
+import { LoggingInterceptor, printEnvs } from 'observability';
 import { otelSDK } from 'observability';
 import { extractBoolEnv } from 'shared-kernel';
 
 import type { INestApplication } from '@nestjs/common';
 import type { MicroserviceOptions } from '@nestjs/microservices';
-import { join } from 'path';
-import { mkdirSync, writeFileSync } from 'fs';
+import { setupSwagger } from 'adapter';
 
-function setupSwagger(
-  app: INestApplication,
-  {
-    title,
-    version = '1.0.0',
-    path = '../docs',
-  }: { title: string; version?: string; path?: string },
-) {
-  const config = new DocumentBuilder()
-    .setTitle(title)
-    .setVersion(version)
-    .build();
-  const doc = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup(path, app, doc, { customSiteTitle: title });
 
-  
-  if (process.argv.includes('--emit-openapi')) {
-    const outDir = join(process.cwd(), 'openapi');
-    mkdirSync(outDir, { recursive: true });
-    const jsonPath = join(outDir, `${title}.${version}.json`);
-    writeFileSync(jsonPath, JSON.stringify(document, null, 2));
-  }
+
+export function printBonusServiceEnvs(): void {
+  printEnvs("bonus-service", [
+    { env: process.env.BONUS_PROC_HTTP_PORT, description: "BONUS_PROC_HTTP_PORT: processor HTTP port" },
+    { env: process.env.BONUS_READ_HTTP_PORT, description: "BONUS_READ_HTTP_PORT: read HTTP port" },
+    { env: process.env.TYPEORM_MIGRATIONS_RUN, description: "TYPEORM_MIGRATIONS_RUN: run migrations on boot (true/false)" },
+    { env: process.env.BUNDLED_SWAGGER, description: "BUNDLED_SWAGGER: Swagger bundle compatibility fix" }
+  ]);
 }
+
+
 
 async function startBonusProcessorApp() {
   const httpPort = Number(process.env.BONUS_PROC_HTTP_PORT ?? 3003);
@@ -116,6 +104,8 @@ async function startBonusReadApp() {
 }
 
 async function bootstrap() {
+  if (true) printBonusServiceEnvs()
+
   await otelSDK.start();
 
   await startBonusProcessorApp();
@@ -135,3 +125,11 @@ bootstrap().catch((err) => {
   console.error({ message: 'Fatal on bootstrap:', err });
   process.exit(1);
 });
+
+
+
+
+
+
+
+
