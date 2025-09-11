@@ -1,4 +1,4 @@
-import { otelTraceLogFormatter } from 'libs/observability/src/lib/winston/formatters/otel-trace-log.formatter';
+import { otelTraceLogFormatter } from 'libs/observability/src/lib/formatters/otel-trace-log.formatter';
 import { extractBoolEnv, extractStrEnvWithFallback } from 'shared-kernel';
 import * as winston from 'winston';
 
