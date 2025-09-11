@@ -23,7 +23,7 @@ export class BonusEventService {
     private readonly additiveBonusRepo: AdditiveBonusRepo,
     private readonly bonusEventRepo: BonusEventRepo,
     private readonly vipProfileRepo: VipProfileRepo,
-  ) {}
+  ) { }
   async process(cmd: BonusEventProcessCommand) {
     return this.uow.runWithRetry({}, async () => {
       let additiveBonusProfile: AdditiveBonus | null =
@@ -37,12 +37,23 @@ export class BonusEventService {
         await this.additiveBonusRepo.insert(additiveBonusProfile);
       }
 
-      const event = new BonusEventEntity({
-        eventId: cmd.eventId,
-        commissionerId: cmd.commissionerId,
-        injestedAt: cmd.injestedAt,
-        eventName: cmd.eventName,
-      });
+      let event: BonusEventEntity;
+
+      try {
+        event = new BonusEventEntity({
+          eventId: cmd.eventId,
+          commissionerId: cmd.commissionerId,
+          injestedAt: cmd.injestedAt,
+          eventName: cmd.eventName,
+        });
+      } catch (error) {
+        Logger.warn({
+          message: `Event ${cmd.eventName} is not a bonus event by the current policy v.${BonusEventRegistry.version}.`,
+          details: {eligibleEvents: BonusEventRegistry.registry},
+          cause: error
+        })
+        return;
+      }
 
       await this.bonusEventRepo.insert(event);
 
