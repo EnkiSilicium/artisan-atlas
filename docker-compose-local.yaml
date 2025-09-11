@@ -1,0 +1,73 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./rdata:/data
+
+    
+  postgres:
+    image: postgres:16-alpine
+    container_name: pg-test
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U app -d app']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # comment out the volume if you want the data to vanish on container removal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zk-test
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ALLOW_ANONYMOUS_LOGIN: yes
+    ports:
+      - '22181:2181'
+
+  kafka:
+    image: bitnami/kafka:3.9.0-debian-12-r13
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_HOSTNAME_ID: 1
+      KAFKA_BROKER_ID: 1
+
+      # Two listeners: one for internal containers, one for host
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://kafka:19092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:19092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+    ports:
+      - '9092:9092'
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+    depends_on:
+      - kafka
+
+
+volumes:
+  pgdata:

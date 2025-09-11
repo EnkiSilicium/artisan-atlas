@@ -27,7 +27,7 @@
           "--config",
           "./webpack.bundle.config.js"
         ],
-        "cwd": "apps/order-service",
+        "cwd": "apps/bonus-service",
         "target": "node"
       }
     },
