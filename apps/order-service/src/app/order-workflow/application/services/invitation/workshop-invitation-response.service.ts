@@ -1,12 +1,11 @@
 import { randomUUID } from 'crypto';
 
 import { Injectable } from '@nestjs/common';
-import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.assertion';
 import {
   AcceptWorkshopInvitationCommand,
   DeclineWorkshopInvitationCommand,
   ConfirmWorkshopInvitationCommand,
-} from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.command';
+} from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-response.command';
 import { assertIsFound } from 'apps/order-service/src/app/order-workflow/domain/entities/common/assert-is-found.assertion';
 import { Order } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity';
 import { stagesTemplateFactory } from 'apps/order-service/src/app/order-workflow/domain/entities/stage/stage-defaults.factory';
@@ -28,6 +27,7 @@ import {
 } from 'contracts';
 import { TypeOrmUoW, enqueueOutbox } from 'persistence';
 import { isoNow } from 'shared-kernel';
+import { assertIsStillPendingInvitations } from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-response.assertion';
 
 @Injectable()
 export class WorkshopInvitationResponseService {

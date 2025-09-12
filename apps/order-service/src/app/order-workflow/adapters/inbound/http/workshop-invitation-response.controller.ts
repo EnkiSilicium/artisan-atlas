@@ -18,7 +18,7 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { validator } from 'adapter';
-import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.service';
+import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-response.service';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
 import { ActorName, ActorNames } from 'auth';
 import {
