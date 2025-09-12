@@ -6,15 +6,15 @@
 **Artisan Atlas** is a commissions marketplace for handmade work. The product goal is trust and clarity in a poorly explored market. Architecture is event-driven microservices with strong correctness in the core workflow and easy evolution around it.
 
 Implemented services:
-1. **Order-service** — It hosts a **typed state machine** that guarantees workflow correctness and acts as the authoritative source of order data. The design emphasizes stability, data integrity, and robust error handling with graceful-degradation modes.
-2. **Bonus-service** — event consumer that awards points under a versioned **bonus policy**. It derives lifetime **grades** and a **N-days-rolling-window VIP** status. This area is intentionally easy to evolve.
+1. [**Order-service**](apps/order-service/src/app/order-workflow/) — It hosts a **typed state machine** that guarantees workflow correctness and acts as the authoritative source of order data. The design emphasizes stability, data integrity, and robust error handling with graceful-degradation modes.
+2. [**Bonus-service**](apps/bonus-service/src/app/modules/bonus-processor/) — event consumer that awards points under a versioned **bonus policy**. It derives lifetime **grades** and a **N-days-rolling-window VIP** status. This area is intentionally easy to evolve.
 
 
 ## Technical TL;DR
-- **Atomicity boundary:** UnitOfWork + transactional outbox; events publish **after** commit.  
-- **Concurrency:** optimistic via `version`; losing attempts don’t leak side effects.  
+- **Atomicity boundary:** UnitOfWork + transactional outbox; events publish **after** commit ([UoW code](libs/persistence/src/lib/unit-of-work/typeorm.uow.ts)).  
+- **Concurrency:** optimistic via `version`; losing attempts don’t leak side effects. ([update code](libs/persistence/src/lib/write-commands/update-optimistic.write-command.ts)).
 - **Events:** global `eventId` is PK/dedupe; one system event -> one user. Producers fan out for multi-recipient effects.  
-- **Kafka keys:** Order-service by `orderId`; Bonus-service by `commissionerId`.  
+- **Kafka keys:** Order-service by `orderId`; Bonus-service by `commissionerId`. One partition per workflow.  
 - **Time:** UTC at boundaries (ISO/epoch); Postgres `timestamptz`. SLIs are skew-aware.  
 - **Failure posture:** user commands succeed without Kafka/Redis; outbox drains on recovery; DLQ per topic (processor planned).  
 - **Read model:** interim/demo; long-term CQRS with owner HTTP as source of truth.  
@@ -82,20 +82,19 @@ Implemented services:
 **Shared aspects**
 - Aggregates enforce domain invariants; state changes are recorded as domain events.  
 - **UnitOfWork** wraps each command; a **transactional outbox** persists outbound events atomically with state. A dispatcher publishes to **Kafka** after commit.  
-- Concurrency is **optimistic**: `version` gates writes; safe retries live in the UoW.
 
 **Order-service**
-- **OrderAggregate** is a **typed state machine** that validates legal transitions and workflow invariants.  
+- ([**OrderAggregate**](apps/order-service/src/app/order-workflow/domain/entities/order/order.entity.ts)) is a **typed state machine**  that validates legal transitions and workflow invariants.  
 - Related aggregates: **WorkshopInvitationAggregate** (terms negotiation), **StagesAggregate** (milestone tracking), **RequestAggregate** (initial request fields such as title, brief, budget, deadlines). `OrderAggregate` orchestrates the whole.  
-- Handlers are short: per-aggregate DB work, then outbox enqueue. Maintainability is prioritized over micro-tuning (repositories are aggregate-bound). Details in [Fault tolerance].
-- Optimistic concurrency on updates; losers fail the version check and produce no side effects thanks to outbox gating. Currently there are no "business-logic" races between users, only operational ones between service instances.
+- Handlers are short: per-aggregate DB work, then outbox enqueue. Maintainability is prioritized over micro-tuning (repositories are aggregate-bound). Details in [Fault tolerance]. [application service example](apps/order-service/src/app/order-workflow/application//services/invitation/workshop-invitation-response.service.ts)
+- ([Optimistic concurrency on updates](libs/persistence/src/lib/write-commands/update-optimistic.write-command.ts)); losers fail the version check and produce no side effects thanks to outbox gating. Currently there are no "business-logic" races between users, only operational ones between service instances. 
 
 > More on typed state machine here: [Appendix: soon]
 
 **Bonus-service (implemented)**
 - Aggregates:
-  - **AdditiveBonus** stores `totalPoints` and derives **grade** via thresholds.
-  - **VipProfile** maintains a last-30-days window and computes **`isVIP`** as points ≥ threshold.  
+  - [**AdditiveBonus**](apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/additive-bonus/additive-bonus.entity.ts) stores `totalPoints` and derives **grade** via thresholds.
+  - [**VipProfile**](apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity.ts) maintains a last-30-days window and computes **`isVIP`** as points ≥ threshold.  
 - Policy lives **in code** (eligible events, point weights, thresholds); changes require redeploy. The domain exposes **recompute** for backfills.  
 - **Identity & dedupe:** a **single system event benefits one user**. The **global `eventId`** is the primary/dedupe key. For multi-recipient effects, producers **fan out** separate events with distinct IDs.
 
@@ -119,7 +118,8 @@ Bonus service
 ###  Fault tolerance & event delivery
 
 **Shared aspects**
-- **Transactional outbox** guarantees “state change and its event” commit together; a dispatcher drains the outbox post-commit.  
+- [**Transactional outbox**](libs/persistence/src/lib/unit-of-work/typeorm.uow.ts) guarantees “state change and its event” commit together; a dispatcher drains the outbox post-commit.  
+- **Errors are treated as contracts**: shared for unified interpretation; carefully grouped into separate [error-libs](libs/error-handling/) based on the rate of change.
 - **Kafka** carries domain events; **stable keys** preserve per-entity ordering within a partition (Order-service by **`orderId`**, Bonus-service by **`commissionerId`**).  **`aggregateVersion`** still attached for potential partition split; enables consumer reordering.
 - Consumers are idempotent (exactly-once **effects**) with a dedupe gate before applying changes. 
 - **DLQ** is per topic; standardized domain-specific errors attached to each message.
@@ -161,7 +161,7 @@ Bonus service
 ## Contracts and policy versioning
 
 ### General approach
-**Producer-driven, tolerant contracts.** Producers own the canonical shape and evolution of messages and HTTP payloads; consumers are **tolerant readers**. Unknown fields are ignored, not errors. Changes are **additive by default**; breaking changes use a new `eventName` or a major `schemaVersion` and may be dual-published during migration.
+**Producer-driven, tolerant [contracts](libs/contracts/src).** Producers own the canonical shape and evolution of messages and HTTP payloads; consumers are **tolerant readers**. Unknown fields are ignored, not errors. Changes are **additive by default**; breaking changes use a new `eventName` or a major `schemaVersion` and may be dual-published during migration.
 
 ### Bonus policy versioning
 - **Policy in code:** the bonus policy (eligible actions, point weights, thresholds) is versioned as **`policyVersion`**.
