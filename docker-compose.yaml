@@ -85,7 +85,7 @@ services:
     ports: ["9092:9092"]
 
   bonus-service-redis:
-    image: ghcr.io/enkisilicium/bonus-service:latest
+    image: ghcr.io/enkisilicium/bonus-service:v.1.0.0
     profiles: ["apps-redis", "test"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -144,7 +144,7 @@ services:
 
 
   order-service-redis:
-    image: ghcr.io/enkisilicium/order-service:v.1
+    image: ghcr.io/enkisilicium/order-service:v.1.0.0
     profiles: ["apps-redis"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -209,7 +209,7 @@ services:
     restart: unless-stopped
 
   order-service-kafka:
-    image: ghcr.io/enkisilicium/order-service:v.1
+    image: ghcr.io/enkisilicium/order-service:v.1.0.0
     profiles: ["apps-kafka"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -272,7 +272,7 @@ services:
 
 
   bonus-service-kafka:
-    image: ghcr.io/enkisilicium/bonus-service:latest
+    image: ghcr.io/enkisilicium/bonus-service:v.1.0.0
     profiles: ["apps-kafka"]
     depends_on:
       postgres: { condition: service_healthy }
