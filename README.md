@@ -23,9 +23,9 @@ Implemented services:
 
 ## Try it out
 
-- ["Run the services" walkthrough](docs\demo\run-the-services.md)
+- ["Run the services" walkthrough](docs/demo/run-the-services.md)
 
-- [Failure modes - graceful degradation demo](docs\demo\kafka-failure-mode.md)
+- [Failure modes - graceful degradation demo](docs/demo/kafka-failure-mode.md)
 
 ---
 
@@ -126,7 +126,7 @@ Bonus service
 
 **Order-service**
 - All **aggregate state transitions** survive **Kafka and Redis outages**: user commands still complete, state is committed, and events wait in the outbox until publish resumes. Side effects (notifications, cache updates) lag and catch up.  
-- For more information refer to [Demo: MQ failure modes](docs\demo\kafka-failure-mode.md)   
+- For more information refer to [Demo: MQ failure modes](docs/demo/kafka-failure-mode.md)   
 
 **Bonus-service**
 - Idempotency via `bonus_event(eventId)` prevents duplicate effects across retries/replays.  
