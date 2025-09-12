@@ -77,13 +77,20 @@ docker compose --profile infra-all --profile apps-kafka down
 
 1. Install [Postman] on your machine (localhost cannot be accessed from within browser).
 2. Follow here: [Flow](https://www.postman.com/artisan-atlas/artisan-atlas/flow/68c39dacd0954f00138c7fa7), then click `clone` and choose any target workspace.
+
 ![Clone](../../assets/flow-clone.png)
+
 3. Click `import` and pick/drop this: [Postman ENV](../../assets/Demo-ENV.postman_environment.json)
+
 ![Import](../../assets/env-import.png)
+
 4. Open `Flows`, select `Order-workflow`. Now you should set `Demo ENV` on any window. A prompt will appear suggesting to set the same on all requests - you agree.
+
 ![Set](../../assets/set-env.png)
+
 5. Click `Run`.
 6. Optional: click `start presentation` to browse pre-selected views.
+
 ![Start-presentation](../../assets/start-presentation.png)
 
 ------------
