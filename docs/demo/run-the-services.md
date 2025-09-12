@@ -15,7 +15,7 @@ Recommendation: try both; Postman for integral workflow overview, Swagger for pl
 ### DockerCompose:
 
 This assumes Docker is set up on your machine:
-1. Download the [DockerCompose file](docker-compose.yaml).
+1. Download the [DockerCompose file](../docker-compose.yaml).
 2. Run:
 ```
    docker compose --profile infra-nokafka --profile apps-redis up -d
