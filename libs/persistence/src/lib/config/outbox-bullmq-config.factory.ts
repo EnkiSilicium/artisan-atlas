@@ -21,7 +21,7 @@ export function outboxBullMqConfigFactory(override?: {
           expoCap: (attemptsMade: number) => {
             const base = 5_000; // 5s base
             const raw = base * Math.pow(2, Math.max(0, attemptsMade - 1));
-            return Math.min(raw, override?.backoffCap ?? 300_000); // cap at 5 min
+            return Math.min(raw, override?.backoffCap ?? 30_000); // cap at 30 sec
           },
         },
       },

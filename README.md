@@ -1,98 +1,169 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Artisan Atlas — Architecture and Implementation Overview
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+>Doc status: Work In Progress. Will be added: code references, ADRs, demos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Abstract
+**Artisan Atlas** is a commissions marketplace for handmade work. The product goal is trust and clarity in a poorly explored market. Architecture is event-driven microservices with strong correctness in the core workflow and easy evolution around it.
 
-## Description
+Implemented services:
+1. **Order-service** — It hosts a **typed state machine** that guarantees workflow correctness and acts as the authoritative source of order data. The design emphasizes stability, data integrity, and robust error handling with graceful-degradation modes.
+2. **Bonus-service** — event consumer that awards points under a versioned **bonus policy**. It derives lifetime **grades** and a **N-days-rolling-window VIP** status. This area is intentionally easy to evolve.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Technical TL;DR
+- **Atomicity boundary:** UnitOfWork + transactional outbox; events publish **after** commit.  
+- **Concurrency:** optimistic via `version`; losing attempts don’t leak side effects.  
+- **Events:** global `eventId` is PK/dedupe; one system event -> one user. Producers fan out for multi-recipient effects.  
+- **Kafka keys:** Order-service by `orderId`; Bonus-service by `commissionerId`.  
+- **Time:** UTC at boundaries (ISO/epoch); Postgres `timestamptz`. SLIs are skew-aware.  
+- **Failure posture:** user commands succeed without Kafka/Redis; outbox drains on recovery; DLQ per topic (processor planned).  
+- **Read model:** interim/demo; long-term CQRS with owner HTTP as source of truth.  
 
-```bash
-$ npm install
-```
+---
 
-## Compile and run the project
+## Try it out
 
-```bash
-# development
-$ npm run start
+- ["Run the services" walkthrough](docs\demo\run-the-services.md)
 
-# watch mode
-$ npm run start:dev
+- [Failure modes - graceful degradation demo](docs\demo\kafka-failure-mode.md)
 
-# production mode
-$ npm run start:prod
-```
+---
 
-## Run tests
+# Business domain
 
-```bash
-# unit tests
-$ npm run test
+## Orders (implemented end-to-end by Order-service)
+1. **Discovery and initial proposal.** The **commissioner** drafts a request and invites several **workshops**.  
+2. **Professional assessment and offers.** Workshops reply with offers that propose concrete budget and timeline; offers may include **stages (milestones)** with optional **blocking** approvals; workshops may also **decline**.
+3. **Selection and initiation.** The commissioner selects one offer and confirms; accepted terms become authoritative for the order.  
+4. **Progress and delivery.** The workshop marks stage completions; when the last stage is done, it marks the order finished. After receiving the product, the commissioner confirms **completed**.  
+5. **Workflow end.** Post-completion activities (e.g., reviews, bonuses) are triggered by events.
 
-# e2e tests
-$ npm run test:e2e
+> [!WARNING]  
+> Payments and delivery details Intentionally omitted. They are largely independent of the core workflow and require cross-department planning.
 
-# test coverage
-$ npm run test:cov
-```
+## Bonus model (implemented by Bonus-service)
+- **Points** are awarded per policy-defined eligible actions.
+- **Grades** derived from **lifetime** totals crossing thresholds.
+- **VIP** derives from **last-N-days** totals crossing a threshold; revoked when the rolling sum drops below it.
+---
 
-## Deployment
+# Stack 
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **Runtime:** Node.js (TypeScript), NestJS  
+- **Monorepo:** Nx; shared libraries for pure domain helpers, persistence, messaging, instrumentation, security
+- **Storage:** PostgreSQL (source of truth), Redis (rate limiting and jobs)  
+- **Messaging:** Apache Kafka  
+- **HTTP:** Nest controllers, DTOs; hexagonal ports/adapters for external boundaries  
+- **Observability (wiring in place):** OpenTelemetry SDK, OTLP; dashboards via Prometheus/Grafana and OpenSearch stack for logs/traces.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**Target deploy platform:** **AWS** (EKS/EC2). Local/demo via docker-compose.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+# Layout 
 
-Check out a few resources that may come in handy when working with NestJS:
+ **DDD + hexagonal (ports and adapters)** aspects. Shared libs organize technical layers in an onion-like way; services group artifacts (interfaces, helpers, assertions…) around first-class citizens at each layer (aggregates/entities in domain, application services in application); ~70% of infra lives in **shared libs** for reuse. Services keep **repositories**, adaptations of shared infra, and service-specific bits.
+ For more information on layout/library decisions refer to [ADR: soon]
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to workshopInvitation? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+# Time & timestamp policy
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- All boundaries use **UTC** in **ISO 8601** or **epoch**; Postgres persists **`timestamptz`**.  
+- TypeORM `Date` is acceptable **inside** a service but **must never leave** the boundary; normalize to UTC ISO/epoch on I/O.  
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Areas of concern -> services
 
-## License
+###  Application logic
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Shared aspects**
+- Aggregates enforce domain invariants; state changes are recorded as domain events.  
+- **UnitOfWork** wraps each command; a **transactional outbox** persists outbound events atomically with state. A dispatcher publishes to **Kafka** after commit.  
+- Concurrency is **optimistic**: `version` gates writes; safe retries live in the UoW.
+
+**Order-service**
+- **OrderAggregate** is a **typed state machine** that validates legal transitions and workflow invariants.  
+- Related aggregates: **WorkshopInvitationAggregate** (terms negotiation), **StagesAggregate** (milestone tracking), **RequestAggregate** (initial request fields such as title, brief, budget, deadlines). `OrderAggregate` orchestrates the whole.  
+- Handlers are short: per-aggregate DB work, then outbox enqueue. Maintainability is prioritized over micro-tuning (repositories are aggregate-bound). Details in [Fault tolerance].
+- Optimistic concurrency on updates; losers fail the version check and produce no side effects thanks to outbox gating. Currently there are no "business-logic" races between users, only operational ones between service instances.
+
+> More on typed state machine here: [Appendix: soon]
+
+**Bonus-service (implemented)**
+- Aggregates:
+  - **AdditiveBonus** stores `totalPoints` and derives **grade** via thresholds.
+  - **VipProfile** maintains a last-30-days window and computes **`isVIP`** as points ≥ threshold.  
+- Policy lives **in code** (eligible events, point weights, thresholds); changes require redeploy. The domain exposes **recompute** for backfills.  
+- **Identity & dedupe:** a **single system event benefits one user**. The **global `eventId`** is the primary/dedupe key. For multi-recipient effects, producers **fan out** separate events with distinct IDs.
+
+---
+
+###  Data
+
+**Shared aspects**
+- **Data is domain-owned (single SoR per domain)**; for future shared read-only data access problem the preferred solution is replicated caching, but per-case trade-off analysis is required.
+- **Only some business rules are enforced as DB constraints**: complex rules enforced in domain+application layers for maintainability; some rules remain DB-only where app-level enforcement is impossible (e.g., uniqueness). Domain (possible values) constraints are duplicated - "last safety net".
+- **Indexing is minimal and intentional:** primary keys and crucial lookups only.  
+- **Domain entities define ORM relations** (TypeORM decorators) due to near 1-to-1 correspondence and convenient "invariants in one place"; migration from TypeORM unlikely.
+
+Bonus service 
+-  **Selective event retention:** bonus-related events persist for recomputation/windowing, as well as deduplication.  
+
+**Read model status**
+- Interim/demo projection exists. Long-term, event-updated CQRS with the data owner as source of truth.
+---
+
+###  Fault tolerance & event delivery
+
+**Shared aspects**
+- **Transactional outbox** guarantees “state change and its event” commit together; a dispatcher drains the outbox post-commit.  
+- **Kafka** carries domain events; **stable keys** preserve per-entity ordering within a partition (Order-service by **`orderId`**, Bonus-service by **`commissionerId`**).  **`aggregateVersion`** still attached for potential partition split; enables consumer reordering.
+- Consumers are idempotent (exactly-once **effects**) with a dedupe gate before applying changes. 
+- **DLQ** is per topic; standardized domain-specific errors attached to each message.
+
+**Order-service**
+- All **aggregate state transitions** survive **Kafka and Redis outages**: user commands still complete, state is committed, and events wait in the outbox until publish resumes. Side effects (notifications, cache updates) lag and catch up.  
+- For more information refer to [Demo: MQ failure modes](docs\demo\kafka-failure-mode.md)   
+
+**Bonus-service**
+- Idempotency via `bonus_event(eventId)` prevents duplicate effects across retries/replays.  
+
+---
+
+###  Observability (partially implemented)
+- Trace and span IDs are attached to each log message for correlation. (implemented)
+- Metrics exported via Prometheus -> OTel. Percentiles computed in the backend.
+
+**Minimum signals**
+- **End-to-end event latency** with **producer timestamp** as reference; dashboards may show a **skew-adjusted** variant.  
+- **Handler/request duration** for HTTP and message handlers.  
+- **Partition offset lag** and core consumer/broker health (including **rebalances across a window**) to correlate lag spikes.  
+- **Outbox backlog**; **DLQ depth and max age**.
+- **Core derivatives of those above**: rates of change computed in dashboard directly.
+
+---
+
+## Operational posture, constraints, and SLOs (implemented; thresholds illustrative)
+
+> Exact thresholds are set with stakeholders. Values below are **examples**, not promises.
+
+- **Data integrity.** Core invariants enforced in code and by Postgres constraints. 
+- **Handler characteristics.** Order-service handlers do per-aggregate DB work and return; no long-running side work in request paths.  
+- **Concurrency & retries.** Optimistic concurrency is preferred. UoW performs **one** in-place retry for retriable DB errors; otherwise HTTP returns precise errors and message paths rely on redelivery.  
+- **Producers & batching.** Producers are **not batched** today; batching may be added if operationally justified, noting it can increase p95 tails.
+
+
+---
+
+## Contracts and policy versioning
+
+### General approach
+**Producer-driven, tolerant contracts.** Producers own the canonical shape and evolution of messages and HTTP payloads; consumers are **tolerant readers**. Unknown fields are ignored, not errors. Changes are **additive by default**; breaking changes use a new `eventName` or a major `schemaVersion` and may be dual-published during migration.
+
+### Bonus policy versioning
+- **Policy in code:** the bonus policy (eligible actions, point weights, thresholds) is versioned as **`policyVersion`**.
+- **Persisted version:** aggregates persist the version their data was computed with.
+- **Change process:** deploy with a new **`policyVersion`**, then run aggregate-owned "**recompute**" to re-derive `additive_bonus` and `vip_profile` from historical `bonus_event` records under the new rules. On version conflict currently sends to DLQ, but in future may be configured to ingest but schedule recompute.
