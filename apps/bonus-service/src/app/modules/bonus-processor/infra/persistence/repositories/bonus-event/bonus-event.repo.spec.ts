@@ -9,13 +9,14 @@ import { BonusEventEntity } from 'apps/bonus-service/src/app/modules/bonus-proce
 import { makeBonusEvent } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/common/bonus-event.entity.mock-factory';
 import { LastMonthEventSet } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/last-month-event-set.entity';
 import { VipProfile } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity';
-import { inRollbackedTestTx, OutboxService, requireTxManager, TypeOrmUoW } from 'persistence';
+import { inRollbackedTestTx, requireTxManager, TypeOrmUoW } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import { BonusEventRepo } from './bonus-event.repo';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { MessageProducerPort } from 'adapter';
+import type { OutboxService } from 'persistence';
 
 const kafkaMock = {
   dispatch: jest.fn().mockResolvedValue(undefined),

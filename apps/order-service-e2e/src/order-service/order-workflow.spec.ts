@@ -1,33 +1,30 @@
 // apps/order-service/e2e/order.e2e.spec.ts
 import { randomUUID } from 'crypto';
+import { inspect } from 'util';
 
 import axios from 'axios';
-import { Kafka, logLevel } from 'kafkajs';
-import { isoNow } from 'shared-kernel';
-
 import {
-  AcceptWorkshopInvitationDtoV1,
-  ConfirmStageCompletionDtoV1,
   KafkaTopics,
-  OrderCancelDtoV1,
-  MarkStageCompletionDtoV1,
-  ConfirmAcceptedInvitationDtoV1,
-  OrderHistoryQueryResultDto,
-  OrderHistoryQueryResultFlatDto,
-  OrderInitDtoV1,
   ApiPaths,
   OrderInitPaths,
   WorkshopInvitationResponsePaths,
   StageCompletionPaths,
   OrderHistoryPaths,
 } from 'contracts';
-
+import { Kafka, logLevel } from 'kafkajs';
+import { isoNow } from 'shared-kernel';
 
 import type { AxiosResponse } from 'axios';
-
+import type {
+  AcceptWorkshopInvitationDtoV1,
+  ConfirmStageCompletionDtoV1,
+  OrderCancelDtoV1,
+  MarkStageCompletionDtoV1,
+  ConfirmAcceptedInvitationDtoV1,
+  OrderHistoryQueryResultDto,
+  OrderInitDtoV1,
+} from 'contracts';
 import type { Consumer } from 'kafkajs';
-import { inspect } from 'util';
-
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -45,7 +42,7 @@ async function pollUntil(
       failures++;
       if (failures === 1 || failures % 3 === 0) {
         const message = e?.response
-          ? `HTTP ${e.response.status} ${e.response.statusText} body=${inspect((e.response.data))}`
+          ? `HTTP ${e.response.status} ${e.response.statusText} body=${inspect(e.response.data)}`
           : e?.code
             ? `${e.code}: ${e.message}`
             : e?.message || String(e);
@@ -133,7 +130,7 @@ async function withConsumer<T>(
     if (axios.isAxiosError(error) || error?.isAxiosError === true) {
       const { response, code, message, status } = error;
       console.error(
-        `[E2E] AxiosError${code ? `: ${code}` : ''} -> ${status ?? response?.status} (${message})\n${inspect((response?.data))}`,
+        `[E2E] AxiosError${code ? `: ${code}` : ''} -> ${status ?? response?.status} (${message})\n${inspect(response?.data)}`,
       );
     }
     throw error;
@@ -147,7 +144,6 @@ async function readStages(
   READ: string,
   commissionerId: string,
 ): Promise<OrderHistoryQueryResultDto> {
-
   const urlRefresh = `${READ}/${ApiPaths.Root}/${OrderHistoryPaths.Root}/${OrderHistoryPaths.Stages}/${OrderHistoryPaths.Refresh}`;
 
   console.log(`[E2E][HTTP] POST ${urlRefresh}`);
@@ -163,8 +159,8 @@ async function readStages(
     timeout: 2500,
   });
   console.log(`[E2E][HTTP] <- ${res.status} from ${urlRead}`);
-  console.log(`[E2E][HTTP] data=${inspect(inspect((res.data)))}`);
-  return res.data;
+  console.log(`[E2E][HTTP] data=${inspect(inspect(res.data))}`);
+  return res.data as OrderHistoryQueryResultDto;
 }
 
 describe('Order workflow integration (read model + Kafka)', () => {
@@ -232,7 +228,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
           },
         } satisfies OrderInitDtoV1);
         console.log(
-          `[E2E] order init response: ${response.status} ${inspect((response.data))}`,
+          `[E2E] order init response: ${response.status} ${inspect(response.data)}`,
         );
 
         expect(response.status).toBeGreaterThanOrEqual(200);
@@ -338,7 +334,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
           `Timed out waiting for order to appear in read model for commissioner ${commissionerId}`,
         ).then(async () => {
           const d = await readStages(READ, commissionerId);
-          console.log(`[E2E][HTTP] final readStages <- ${inspect((d))}`);
+          console.log(`[E2E][HTTP] final readStages <- ${inspect(d)}`);
           return d.items[0].orderId;
         });
         console.log(`[E2E] Order retrieved: ${orderId}`);
@@ -405,10 +401,10 @@ describe('Order workflow integration (read model + Kafka)', () => {
         console.log(
           `[E2E][HTTP] POST ${confirmInvitationUrl} orderId=${orderId} workshopId=${workshops[0]}`,
         );
-        await axios.post(
-          confirmInvitationUrl,
-          { orderId, workshopId: workshops[0] } satisfies ConfirmAcceptedInvitationDtoV1,
-        );
+        await axios.post(confirmInvitationUrl, {
+          orderId,
+          workshopId: workshops[0],
+        } satisfies ConfirmAcceptedInvitationDtoV1);
 
         console.log(`[E2E] Marking & confirming stages...`);
         const mark = (stage: string) =>
@@ -422,8 +418,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
             } satisfies MarkStageCompletionDtoV1,
           );
         const confirm = (stage: string) =>
-
-        axios.post(
+          axios.post(
             `${CMD}/${ApiPaths.Root}/${StageCompletionPaths.Root}/${StageCompletionPaths.Confirm}`,
             {
               orderId,
@@ -432,7 +427,6 @@ describe('Order workflow integration (read model + Kafka)', () => {
               stageName: stage,
             } satisfies ConfirmStageCompletionDtoV1,
           );
-
 
         console.log(
           `[E2E][HTTP] POST ${CMD}/${ApiPaths.Root}/${StageCompletionPaths.Root}/${StageCompletionPaths.Mark} Design`,
@@ -621,7 +615,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
           `Timed out waiting for order to appear in read model for commissioner ${commissionerId}`,
         ).then(async () => {
           const d = await readStages(READ, commissionerId);
-          console.log(`[E2E][HTTP] final readStages <- ${inspect((d))}`);
+          console.log(`[E2E][HTTP] final readStages <- ${inspect(d)}`);
           return d.items[0].orderId;
         });
 
@@ -707,7 +701,7 @@ describe('Order workflow integration (read model + Kafka)', () => {
           `Timed out waiting for order to appear in read model for commissioner ${commissionerId}`,
         ).then(async () => {
           const d = await readStages(READ, commissionerId);
-          console.log(`[E2E][HTTP] final readStages <- ${inspect((d))}`);
+          console.log(`[E2E][HTTP] final readStages <- ${inspect(d)}`);
           return d.items[0].orderId;
         });
 
@@ -830,10 +824,10 @@ describe('Order workflow integration (read model + Kafka)', () => {
         console.log(
           `[E2E][HTTP] POST ${confirmInvitationUrl} orderId=${orderId} workshopId=${workshops[0]}`,
         );
-        await axios.post(
-          confirmInvitationUrl,
-          { orderId, workshopId: workshops[0] } satisfies ConfirmAcceptedInvitationDtoV1,
-        );
+        await axios.post(confirmInvitationUrl, {
+          orderId,
+          workshopId: workshops[0],
+        } satisfies ConfirmAcceptedInvitationDtoV1);
 
         const before = await readStages(READ, commissionerId);
 

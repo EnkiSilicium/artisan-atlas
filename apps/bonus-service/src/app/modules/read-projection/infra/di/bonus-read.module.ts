@@ -7,8 +7,8 @@ import { bonusReadTypeOrmOptions } from 'apps/bonus-service/src/app/modules/read
 import { bonusReadWinstonConfig } from 'apps/bonus-service/src/app/modules/read-projection/infra/config/winston.config';
 import { BonusReadProjection } from 'apps/bonus-service/src/app/modules/read-projection/infra/persistence/projections/bonus-read.projection';
 import { BonusReadRepo } from 'apps/bonus-service/src/app/modules/read-projection/infra/persistence/repositories/bonus-read.repository';
-import { BonusReadRefreshWorker } from 'apps/bonus-service/src/app/modules/read-projection/infra/workers/bonus-read-refresh.worker';
 import { BONUS_READ_REFRESH_QUEUE } from 'apps/bonus-service/src/app/modules/read-projection/infra/workers/bonus-read-refresh.token';
+import { BonusReadRefreshWorker } from 'apps/bonus-service/src/app/modules/read-projection/infra/workers/bonus-read-refresh.worker';
 import {
   HttpErrorInterceptor,
   HttpErrorInterceptorOptions,
@@ -46,7 +46,6 @@ import { LoggingInterceptor } from 'observability';
       },
     }),
 
-
     // ClientsModule.register([
     //     {
     //         name: MQ_PRODUCER,
@@ -61,9 +60,7 @@ import { LoggingInterceptor } from 'observability';
     // ]),
 
     WinstonModule.forRoot({
-      transports: [
-        bonusReadWinstonConfig.transports.consoleTransport,
-      ],
+      transports: [bonusReadWinstonConfig.transports.consoleTransport],
     }),
   ],
   controllers: [BonusReadController],

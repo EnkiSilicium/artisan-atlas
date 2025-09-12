@@ -1,4 +1,4 @@
-import { ActorName } from '../enums/actor.enum';
+import type { ActorName } from '../enums/actor.enum';
 
 export type Principal = {
   actorName: ActorName;

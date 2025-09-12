@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
@@ -10,7 +16,10 @@ import { defaultIfEmpty } from 'rxjs/operators';
 
 @Injectable()
 export class BonusEventRedisDispatcher
-  implements MessageProducerPort<BonusEventInstanceUnion>, OnModuleInit, OnModuleDestroy
+  implements
+    MessageProducerPort<BonusEventInstanceUnion>,
+    OnModuleInit,
+    OnModuleDestroy
 {
   private readonly logger = new Logger(BonusEventRedisDispatcher.name);
 
@@ -25,7 +34,9 @@ export class BonusEventRedisDispatcher
     try {
       await this.client.close();
     } catch (e) {
-      this.logger.warn({ message: `Redis client close error: ${(e as Error).message}` });
+      this.logger.warn({
+        message: `Redis client close error: ${(e as Error).message}`,
+      });
     }
   }
 

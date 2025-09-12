@@ -22,8 +22,6 @@ import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { BaseEvent } from 'contracts';
 import type { OutboxService } from 'persistence';
 
-type MessageProducerPort<T> = { enqueuePublish(messages: T[]): Promise<void> };
-
 // Now the producer publishes BaseEvent payloads, not OutboxMessage rows
 const publishMock: OutboxService = <OutboxService>(<unknown>{
   enqueuePublish: jest.fn().mockResolvedValue(undefined),
@@ -74,7 +72,11 @@ describe('TypeOrmUoW (integration) — enqueuePublishes BaseEvent payloads', () 
 
     const msg: OutboxMessage<BaseEvent<string>> = {
       id: randomUUID(),
-      payload: { eventId: randomUUID(), eventName: 'test' as const, schemaV: 1 },
+      payload: {
+        eventId: randomUUID(),
+        eventName: 'test' as const,
+        schemaV: 1,
+      },
       createdAt: isoNow(),
     } as any;
 

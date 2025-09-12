@@ -208,13 +208,6 @@ export class VipProfile implements EntityTechnicalsInterface {
       this.isVIP = this.lastPeriodPoints >= vipPolicy.vipThreshold;
     }
     // Record the event in the lastMonthEvents list with the appropriate time bucket
-    const now = Date.now();
-
-    const bucketIntervalSec = Math.floor(
-      windowAlgoRegistry.periodSecondsLength /
-        windowAlgoRegistry.amountOfBuckets,
-    );
-    const nowSec = Math.floor(now / 1000);
 
     const Bucket =
       (this.lastBucket + windowAlgoRegistry.amountOfBuckets - 1) %

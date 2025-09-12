@@ -1,72 +1,325 @@
-services:
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./rdata:/data
+# docker-compose.yml
+name: artisan-atlas-demo
 
-    
+x-health:
+  pg: &pg-health
+    test: ["CMD-SHELL", "pg_isready -U app -d app -h 127.0.0.1 -p 5432"]
+    interval: 3s
+    timeout: 3s
+    retries: 20
+  redis: &redis-health
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 3s
+    timeout: 3s
+    retries: 20
+  kafka: &kafka-health
+    test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+    interval: 5s
+    timeout: 4s
+    retries: 30
+
+volumes:
+  pgdata:
+  logs:
+
+services:
+
+  dozzle:
+    image: amir20/dozzle:latest
+    profiles: ["infra-nokafka", "infra-all"]
+    ports: ["8085:8080"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    environment:
+      DOZZLE_FILTER: "label=com.docker.compose.project=artisan-atlas-demo"
+
   postgres:
     image: postgres:16-alpine
-    container_name: pg-test
+    profiles: ["infra-nokafka", "infra-all"]
     environment:
+      POSTGRES_DB: app
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
-      POSTGRES_DB: app
-    ports:
-      - '5432:5432'
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U app -d app']
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    # comment out the volume if you want the data to vanish on container removal
+    healthcheck: *pg-health
+    ports: ["5432:5432"]
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    profiles: ["infra-nokafka", "infra-all"]
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck: *redis-health
+    ports: ["6379:6379"]
+
+
+
+
+
   zookeeper:
-    image: bitnami/zookeeper:latest
-    container_name: zk-test
+    image: zookeeper:3.8-jre-17
+    profiles: ["infra-all"]
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ALLOW_ANONYMOUS_LOGIN: yes
+      
     ports:
-      - '22181:2181'
+      - "2181:2181"
 
   kafka:
     image: bitnami/kafka:3.9.0-debian-12-r13
+    profiles: ["infra-all"]
+    container_name: kafka
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_HOSTNAME_ID: 1
-      KAFKA_BROKER_ID: 1
-
-      # Two listeners: one for internal containers, one for host
-      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://kafka:19092'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:19092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      
+      KAFKA_KRAFT_CLUSTER_ID: "abcdefghijklmnopqrstuv"
+    healthcheck: *kafka-health
+    ports: ["9092:9092"]
 
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
-    ports:
-      - '9092:9092'
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - '8080:8080'
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+  bonus-service-redis:
+    image: ghcr.io/enkisilicium/bonus-service:latest
+    profiles: ["apps-redis", "test"]
     depends_on:
-      - kafka
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+    environment:
+ 
+      NODE_ENV: "development"
+      DEBUG: "false"
+      LOGFILE_OUTPUT_LOCATION: "/logs/logfile.log"
 
-volumes:
-  pgdata:
+
+      BONUS_PROC_HTTP_PORT: "3003"
+      BONUS_READ_HTTP_PORT: "3004"
+      HTTP_PREFIX: "api"
+
+
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+
+      PG_URL: ""              
+      PG_HOST: "postgres"
+      PG_PORT: "5432"
+      PG_USER: "app"
+      PG_PASSWORD: "app"
+      PG_DB: "app"
+      DB_SCHEMA: "public"
+      PG_SSL: "false"
+      PG_POOL_MAX: "10"
+      PG_POOL_MIN: "0"
+      PG_POOL_IDLE_MS: "30000"
+      PG_POOL_CONN_MS: "10000"
+      TYPEORM_LOGGING: ""
+      TYPEORM_SLOW_MS: "500"
+      TYPEORM_MIGRATIONS_RUN: "false"
+
+ 
+      KAFKA_AWS_MODE: "false"
+      KAFKA_AUTH_ROLEID: ""
+      KAFKA_AUTH_ACCESSKEYID: ""
+      KAFKA_AUTH_SECRETACCESSKEY: ""
+      KAFKA_BROKER_HOSTNAME: "kafka"
+      KAFKA_BROKER_PORT: "9092"
+      KAFKA_CLIENT_ID: "bonus-service"
+      KAFKA_CONSUMER_GROUPID: "bonus-service"
+      KAFKA_RETRIES: "8"
+      BUNDLED_SWAGGER: "true"
+
+    
+      USE_REDIS_MQ: "true"
+    ports:
+      - "3003:3003"
+      - "3004:3004"
+    restart: unless-stopped
+
+
+
+  order-service-redis:
+    image: ghcr.io/enkisilicium/order-service:v.1
+    profiles: ["apps-redis"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+    environment:
+
+      NODE_ENV: "development"
+      DEBUG: "false"
+      LOGFILE_OUTPUT_LOCATION: "/logs/logfile.log"
+
+   
+      ORDER_WRKFLOW_HTTP_PORT: "3001"
+      ORDER_READ_HTTP_PORT: "3002"
+      HTTP_PREFIX: "api"
+
+
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+
+      PG_URL: ""                    
+      PG_HOST: "postgres"
+      PG_PORT: "5432"
+      PG_USER: "app"
+      PG_PASSWORD: "app"
+      PG_DB: "app"
+      DB_SCHEMA: "public"
+      PG_SSL: "false"
+      PG_POOL_MAX: "10"
+      PG_POOL_MIN: "0"
+      PG_POOL_IDLE_MS: "30000"
+      PG_POOL_CONN_MS: "10000"
+      TYPEORM_LOGGING: ""           
+      TYPEORM_SLOW_MS: "500"
+
+
+      JWT_PUBLIC_KEY: ""          
+      JWT_AUD: ""                 
+      JWT_ISS: ""                  
+
+
+  
+      KAFKA_AWS_MODE: "false"
+      KAFKA_AUTH_ROLEID: ""
+      KAFKA_AUTH_ACCESSKEYID: ""
+      KAFKA_AUTH_SECRETACCESSKEY: ""
+      KAFKA_BROKER_HOSTNAME: "kafka"
+      KAFKA_BROKER_PORT: "9092"
+      KAFKA_CLIENT_ID: "order-service"
+      KAFKA_CONSUMER_GROUPID: "order-service"
+      KAFKA_RETRIES: "8"
+
+  
+      USE_REDIS_MQ: "true"
+
+      BUNDLED_SWAGGER: "true"
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - logs:/logs
+    restart: unless-stopped
+
+  order-service-kafka:
+    image: ghcr.io/enkisilicium/order-service:v.1
+    profiles: ["apps-kafka"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      kafka:    { condition: service_healthy }
+    environment:
+      NODE_ENV: "development"
+      DEBUG: "false"
+      LOGFILE_OUTPUT_LOCATION: "/logs/logfile.log"
+
+      ORDER_WRKFLOW_HTTP_PORT: "3001"
+      ORDER_READ_HTTP_PORT: "3002"
+      HTTP_PREFIX: "api"
+
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+      PG_URL: ""
+      PG_HOST: "postgres"
+      PG_PORT: "5432"
+      PG_USER: "app"
+      PG_PASSWORD: "app"
+      PG_DB: "app"
+      DB_SCHEMA: "public"
+      PG_SSL: "false"
+      PG_POOL_MAX: "10"
+      PG_POOL_MIN: "0"
+      PG_POOL_IDLE_MS: "30000"
+      PG_POOL_CONN_MS: "10000"
+      TYPEORM_LOGGING: ""
+      TYPEORM_SLOW_MS: "500"
+
+      JWT_PUBLIC_KEY: ""
+      JWT_AUD: ""
+      JWT_ISS: ""
+
+
+      KAFKA_AWS_MODE: "false"
+      KAFKA_AUTH_ROLEID: ""
+      KAFKA_AUTH_ACCESSKEYID: ""
+      KAFKA_AUTH_SECRETACCESSKEY: ""
+      KAFKA_BROKER_HOSTNAME: "kafka"
+      KAFKA_BROKER_PORT: "9092"
+      KAFKA_CLIENT_ID: "order-service"
+      KAFKA_CONSUMER_GROUPID: "order-service"
+      KAFKA_RETRIES: "8"
+
+      USE_REDIS_MQ: "false"
+
+
+      BUNDLED_SWAGGER: "true"
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    volumes:
+      - logs:/logs
+    restart: unless-stopped
+
+
+
+
+  bonus-service-kafka:
+    image: ghcr.io/enkisilicium/bonus-service:latest
+    profiles: ["apps-kafka"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      kafka:    { condition: service_healthy }
+    environment:
+      NODE_ENV: "development"
+      DEBUG: "false"
+      LOGFILE_OUTPUT_LOCATION: "/logs/logfile.log"
+
+      BONUS_PROC_HTTP_PORT: "3003"
+      BONUS_READ_HTTP_PORT: "3004"
+      HTTP_PREFIX: "api"
+
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+      PG_URL: ""
+      PG_HOST: "postgres"
+      PG_PORT: "5432"
+      PG_USER: "app"
+      PG_PASSWORD: "app"
+      PG_DB: "app"
+      DB_SCHEMA: "public"
+      PG_SSL: "false"
+      PG_POOL_MAX: "10"
+      PG_POOL_MIN: "0"
+      PG_POOL_IDLE_MS: "30000"
+      PG_POOL_CONN_MS: "10000"
+      TYPEORM_LOGGING: ""
+      TYPEORM_SLOW_MS: "500"
+      TYPEORM_MIGRATIONS_RUN: "false"
+
+      KAFKA_AWS_MODE: "false"
+      KAFKA_AUTH_ROLEID: ""
+      KAFKA_AUTH_ACCESSKEYID: ""
+      KAFKA_AUTH_SECRETACCESSKEY: ""
+      KAFKA_BROKER_HOSTNAME: "kafka"
+      KAFKA_BROKER_PORT: "9092"
+      KAFKA_CLIENT_ID: "bonus-service"
+      KAFKA_CONSUMER_GROUPID: "bonus-service"
+      KAFKA_RETRIES: "8"
+      
+
+      BUNDLED_SWAGGER: "true"
+      USE_REDIS_MQ: "false"
+    ports:
+      - "3003:3003"
+      - "3004:3004"
+    restart: unless-stopped

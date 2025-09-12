@@ -4,9 +4,10 @@ import { InfraError } from 'error-handling/error-core';
 import { ProgrammerError } from 'error-handling/error-core';
 import { DomainError } from 'error-handling/error-core';
 import { InfraErrorRegistry } from 'error-handling/registries/common';
+import { assertIsObject } from 'shared-kernel';
 import { QueryFailedError } from 'typeorm';
 
-import type { AppError, ErrorRegistryInterface } from 'error-handling/error-core';
+import type { ErrorRegistryInterface } from 'error-handling/error-core';
 
 /**
  * Takes in the driver/connection/custom-infra error and rethrows a remapped version of it
@@ -17,9 +18,11 @@ import type { AppError, ErrorRegistryInterface } from 'error-handling/error-core
  * @returns never - always throws
  */
 export function remapTypeOrmPgErrorToInfra(
-  error: Error,
+  error: unknown,
   context: Record<string, unknown> = {},
 ): never {
+  assertIsObject(error);
+
   const infraRegistry: ErrorRegistryInterface<string> = InfraErrorRegistry;
 
   const CODES = infraRegistry.codes as Record<string, string>;
@@ -51,13 +54,13 @@ export function remapTypeOrmPgErrorToInfra(
 
   // 1) Node/driver socket errors (not wrapped by QueryFailedError)
   // UNAVAILABLE — dependency cannot be reached at all.
-  const nodeCode = (error as AppError)?.code ? String((error as AppError).code) : '';
+  const nodeCode = error['code'] ? String(error['code']) : '';
   if (
     /^(ECONNRESET|ECONNREFUSED|EPIPE|ENETUNREACH|EHOSTUNREACH)$/i.test(nodeCode)
   ) {
     return throwInfra('UNAVAILABLE', { nodeCode });
   }
-  // TIMEOUT — we waited and gave up.
+  // TIMEOUT.
   if (/^ETIMEDOUT$/i.test(nodeCode)) {
     return throwInfra('TIMEOUT', { nodeCode });
   }
@@ -145,7 +148,7 @@ export function remapTypeOrmPgErrorToInfra(
   }
 
   // 3) Non-QueryFailedError with timeout/connection smell
-  const message = String(error?.message ?? '');
+  const message = String(error['message'] ?? '');
   if (/timeout/i.test(message)) return throwInfra('TIMEOUT', { message });
   if (/connection.*(closed|lost|refused)/i.test(message))
     return throwInfra('UNAVAILABLE', { message });

@@ -29,7 +29,7 @@ export class OrderCancelService {
         orderId: cmd.orderId,
       });
 
-      order.cancelOrder();
+      const nextState = order.cancelOrder();
 
       await this.orderRepo.update(order);
 
@@ -50,6 +50,8 @@ export class OrderCancelService {
           ...eventPayload,
         },
       });
+
+      return {nextState}
     });
   }
 }

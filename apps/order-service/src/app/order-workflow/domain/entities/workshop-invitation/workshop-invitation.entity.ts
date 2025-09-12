@@ -18,7 +18,6 @@ import { EntityTechnicalsInterface, IsoDateTransformer } from 'persistence';
 import { assertValid } from 'shared-kernel';
 import { assertIsObject } from 'shared-kernel';
 import {
-  Check,
   Index,
   Entity,
   PrimaryColumn,
@@ -30,7 +29,6 @@ import {
   VersionColumn,
   OneToMany,
 } from 'typeorm';
-
 
 @Index('ix_workshopInvitation_workshop', ['workshopId'])
 @Entity({ name: 'workshop_invitation' })

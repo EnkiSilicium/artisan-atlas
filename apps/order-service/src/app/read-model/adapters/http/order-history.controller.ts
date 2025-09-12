@@ -6,7 +6,6 @@ import {
   Query,
   UsePipes,
   ValidationPipe,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,14 +13,13 @@ import {
   ApiOkResponse,
   ApiAcceptedResponse,
 } from '@nestjs/swagger';
+import { validator } from 'adapter';
 import { OrderStagesReadService } from 'apps/order-service/src/app/read-model/application/query-handlers/history.query-handler';
-
 import {
   OrderHistoryQueryResultDto,
   ReadOrderStagesQueryDto,
   OrderHistoryPaths,
 } from 'contracts';
-import { validator } from 'adapter';
 
 @ApiTags('Orders read')
 @Controller(`${OrderHistoryPaths.Root}/${OrderHistoryPaths.Stages}`)
