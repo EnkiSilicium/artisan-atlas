@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
@@ -10,7 +16,10 @@ import { defaultIfEmpty } from 'rxjs/operators';
 
 @Injectable()
 export class OrderEventRedisDispatcher
-  implements MessageProducerPort<OrderEventInstanceUnion>, OnModuleInit, OnModuleDestroy
+  implements
+    MessageProducerPort<OrderEventInstanceUnion>,
+    OnModuleInit,
+    OnModuleDestroy
 {
   private readonly logger = new Logger(OrderEventRedisDispatcher.name);
 
@@ -18,14 +27,18 @@ export class OrderEventRedisDispatcher
 
   async onModuleInit() {
     await this.client.connect();
-    this.logger.warn({message: `Redis producer enabled - this mode is not intended for production environment!`});
+    this.logger.warn({
+      message: `Redis producer enabled - this mode is not intended for production environment!`,
+    });
   }
 
   async onModuleDestroy() {
     try {
       await this.client.close();
     } catch (e) {
-      this.logger.warn({ message: `Redis client close error: ${(e as Error).message}` });
+      this.logger.warn({
+        message: `Redis client close error: ${(e as Error).message}`,
+      });
     }
   }
 

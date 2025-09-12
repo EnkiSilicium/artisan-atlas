@@ -1,5 +1,6 @@
 import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
+
 import type { JwtPayload } from '../strategies/jwt.strategy';
 
 export function assertValidJwtPayload(

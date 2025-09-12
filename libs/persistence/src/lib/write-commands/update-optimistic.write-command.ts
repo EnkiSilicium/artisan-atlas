@@ -3,11 +3,10 @@ import {
   ProgrammerErrorRegistry,
   InfraErrorRegistry,
 } from 'error-handling/registries/common';
-
-import { assertPositiveInteger } from '../assertions/assert-positive-integer.assertion';
-
 import { assertImplementsEntityTechnicals } from 'libs/persistence/src/lib/assertions/assert-implements-entity-technicals.assertion';
 import { assertIsObject, isoNow } from 'shared-kernel';
+
+import { assertPositiveInteger } from '../assertions/assert-positive-integer.assertion';
 
 import type { DataSource, EntityManager, ObjectType } from 'typeorm';
 

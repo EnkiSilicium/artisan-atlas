@@ -13,12 +13,13 @@ import { makeRequest } from 'apps/order-service/src/app/order-workflow/infra/per
 import { RequestRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/request/request.repo';
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
 import { InfraError } from 'error-handling/error-core';
-import { OutboxService, TypeOrmUoW, inRollbackedTestTx } from 'persistence';
+import { TypeOrmUoW, inRollbackedTestTx } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { MessageProducerPort } from 'adapter';
+import type { OutboxService } from 'persistence';
 
 describe('RequestRepo (integration)', () => {
   let moduleRef: TestingModule;

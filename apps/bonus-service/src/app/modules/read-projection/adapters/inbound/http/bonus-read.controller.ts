@@ -13,13 +13,13 @@ import {
   ApiOkResponse,
   ApiAcceptedResponse,
 } from '@nestjs/swagger';
+import { validator } from 'adapter';
 import { BonusReadHandler } from 'apps/bonus-service/src/app/modules/read-projection/application/bonus-read/bonus-read.query-handler';
 import {
   BonusReadresultDto,
   BonusReadQueryDto,
   BonusReadPaths,
 } from 'contracts';
-import { validator } from 'adapter';
 
 @ApiTags('Bonus read')
 @Controller(BonusReadPaths.Root)

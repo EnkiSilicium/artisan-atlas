@@ -7,10 +7,8 @@ export function redisConfig(override?: Partial<RedisOptions>): RedisOptions {
     ...(override ?? {}),
 
     enableOfflineQueue: false,
-    retryStrategy: t => Math.min(1000 * 2 ** (t - 1), 30_000),
+    retryStrategy: (t) => Math.min(1000 * 2 ** (t - 1), 30_000),
     lazyConnect: true,
     autoResendUnfulfilledCommands: true,
-    
   };
 }
-

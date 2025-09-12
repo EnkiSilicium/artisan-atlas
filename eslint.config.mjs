@@ -50,20 +50,21 @@ export default tseslint.config(
       // Prettier decides formatting; warn instead of screaming
       'prettier/prettier': 'warn',
 
-      // Sensible guardrails
+
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'warn',
 
-      // TS essentials
+
       '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/require-await': 'warn',
 
 
 
-      // Dead code cleanup
+
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
@@ -103,6 +104,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
        '@typescript-eslint/require-await': 'off',
       'no-console': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'warn'
     },
   }),
 

@@ -62,8 +62,7 @@ export class WorkshopInvitationResponseService {
         ? new StagesAggregate(cmd.payload.stages)
         : new StagesAggregate([stageDefault]);
 
-
-      assertIsStillPendingInvitations(order)
+      assertIsStillPendingInvitations(order);
 
       workshopInvitation.accept(cmd.payload);
 

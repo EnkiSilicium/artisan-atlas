@@ -2,14 +2,13 @@ import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
-import { OrderStagesReadService } from '../../application/query-handlers/history.query-handler';
 import {
   ORDER_HISTORY_REFRESH_JOB,
   ORDER_HISTORY_REFRESH_QUEUE,
 } from './order-history-refresh.token';
+import { OrderStagesReadService } from '../../application/query-handlers/history.query-handler';
 
 @Processor(ORDER_HISTORY_REFRESH_QUEUE)
-
 export class OrderHistoryRefreshWorker
   extends WorkerHost
   implements OnModuleInit

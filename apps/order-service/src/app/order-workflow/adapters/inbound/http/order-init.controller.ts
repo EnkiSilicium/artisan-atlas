@@ -17,12 +17,13 @@ import {
   ApiUnprocessableEntityResponse,
   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
-import { OrderInitService } from 'apps/order-service/src/app/order-workflow/application/services/order/order-init.service';
-import { OrderInitResultDto } from 'contracts';
-import { OrderInitDtoV1, OrderInitPaths } from 'contracts';
 import { validator } from 'adapter';
+import { OrderInitService } from 'apps/order-service/src/app/order-workflow/application/services/order/order-init.service';
 import { OrderAuthGuardProxy } from 'apps/order-service/src/app/order-workflow/infra/auth/proxy/auth-token-proxy';
 import { ActorName, ActorNames } from 'auth';
+import { OrderInitResultDto } from 'contracts';
+import { OrderInitDtoV1, OrderInitPaths } from 'contracts';
+
 import { RequestCooldownGuard } from '../../../infra/auth/guards/request-cooldown.guard';
 
 @ApiTags('Order workflow')

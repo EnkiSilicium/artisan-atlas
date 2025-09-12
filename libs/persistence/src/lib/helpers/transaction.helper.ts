@@ -39,14 +39,10 @@ export function requireTxManager(ds: {
 }): EntityManager {
   const ambient = getAmbient();
 
-  const ensure = 'manager'
-  const whenCalledFrom = requireTxManager.name
+  const ensure = 'manager';
+  const whenCalledFrom = requireTxManager.name;
 
-  assertInsideTransaction(
-    ambient,
-    ensure,
-    whenCalledFrom,
-  );
+  assertInsideTransaction(ambient, ensure, whenCalledFrom);
 
   return ambient.manager;
 }
@@ -60,15 +56,10 @@ export function requireTxManager(ds: {
 export function registerBeforeCommit(cb: () => Promise<void> | void) {
   const ambient = getAmbient();
 
-  const ensure = 'beforeCommit'
-  const whenCalledFrom = registerBeforeCommit.name
+  const ensure = 'beforeCommit';
+  const whenCalledFrom = registerBeforeCommit.name;
 
-
-  assertInsideTransaction(
-    ambient,
-    ensure,
-    whenCalledFrom,
-  );
+  assertInsideTransaction(ambient, ensure, whenCalledFrom);
   ambient.beforeCommit.push(cb);
 }
 
@@ -81,14 +72,10 @@ export function registerBeforeCommit(cb: () => Promise<void> | void) {
 export function registerAfterCommit(cb: () => Promise<void> | void) {
   const ambient = getAmbient();
 
-  const ensure = 'afterCommit'
-  const whenCalledFrom = registerAfterCommit.name
+  const ensure = 'afterCommit';
+  const whenCalledFrom = registerAfterCommit.name;
 
-  assertInsideTransaction(
-    ambient,
-    ensure,
-    whenCalledFrom,
-  );
+  assertInsideTransaction(ambient, ensure, whenCalledFrom);
 
   ambient.afterCommit.push(cb);
 }
@@ -105,17 +92,12 @@ export function enqueueOutbox<e extends BaseEvent<string>>(
   message: OutboxMessage<e>,
 ) {
   const ambient = getAmbient();
-  const ensure = 'outboxBuffer'
-  const whenCalledFrom = enqueueOutbox.name
+  const ensure = 'outboxBuffer';
+  const whenCalledFrom = enqueueOutbox.name;
 
-  assertInsideTransaction(
-    ambient,
-    ensure,
-    whenCalledFrom,
-  );
-  //assertImplementsEntityTechnicals(message.payload);
+  assertInsideTransaction(ambient, ensure, whenCalledFrom);
 
-  if (hasTimeMarkers(message.payload)) {
+  if (timeMarkersAreDateType(message.payload)) {
     // recasting annoying typeorm date objects into ISO strings
     message.payload.createdAt = <Date>(
       (<unknown>message.payload.createdAt.toISOString())
@@ -128,15 +110,14 @@ export function enqueueOutbox<e extends BaseEvent<string>>(
   ambient.outboxBuffer.push(message);
 }
 
-function hasTimeMarkers(
+function timeMarkersAreDateType(
   obj: any,
 ): obj is { createdAt: Date; lastUpdatedAt: Date } {
   return (
-    obj &&
     typeof obj === 'object' &&
     'createdAt' in obj &&
     'lastUpdatedAt' in obj &&
-    obj.createdAt instanceof Date &&
-    obj.lastUpdatedAt instanceof Date
+    obj?.createdAt instanceof Date &&
+    obj?.lastUpdatedAt instanceof Date
   );
 }

@@ -1,6 +1,12 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { Request } from 'express';
+/* eslint-disable */
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ActorEntityFieldMap, ActorName, Principal } from 'auth';
+import { Request } from 'express';
 
 @Injectable()
 export class MockAuthGuard implements CanActivate {
@@ -18,10 +24,10 @@ export class MockAuthGuard implements CanActivate {
       ActorName,
       string,
     ][]) {
-      const id = (body as any)[field];
+      const id = body[field];
       if (typeof id === 'string') {
         const principal: Principal = { actorName, id };
-        (body as any).principal = principal;
+        body.principal = principal;
         (req as any).user = principal;
         break;
       }

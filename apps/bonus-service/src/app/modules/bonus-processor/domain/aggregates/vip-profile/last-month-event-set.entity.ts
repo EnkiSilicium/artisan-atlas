@@ -68,9 +68,7 @@ export class LastMonthEventSet implements EntityTechnicalsInterface {
    * Prevents commissionerId discrepancy.
    */
   @OneToOne(() => BonusEventEntity, { eager: false, onDelete: 'CASCADE' })
-  @JoinColumn([
-    { name: 'event_id', referencedColumnName: 'eventId' },
-  ])
+  @JoinColumn([{ name: 'event_id', referencedColumnName: 'eventId' }])
   event!: BonusEventEntity;
 
   //@IsISO8601()

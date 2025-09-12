@@ -1,17 +1,27 @@
-import { OrderActions, OrderStates } from './order.enum';
-import { StateRegistry } from './order.state';
-import {
-  LegalOutcome,
-  IllegalOutcome,
-  NextActions,
-} from './order.type';
+/* eslint-disable */
+import { OrderActions } from './order.enum';
+
+import type { OrderStates } from './order.enum';
+import type { StateRegistry } from './order.state';
+import type { LegalOutcome, IllegalOutcome, NextActions } from './order.type';
+
+
+/**
+ * The file below is a type state machine test.
+ * If compiler does not say anything, tests passed
+ */
+
+
 
 // Completed is a terminal state and exposes no next actions.
 // @ts-expect-error Terminal states should not accept any action
-const completedHasAction: NextActions<OrderStates.Completed> = OrderActions.Cancel;
+const completedHasAction: NextActions<OrderStates.Completed> =
+  OrderActions.Cancel;
 
 // Illegal actions against terminal states yield IllegalOutcome.
-type CompletedState = InstanceType<(typeof StateRegistry)[OrderStates.Completed]>;
+type CompletedState = InstanceType<
+  (typeof StateRegistry)[OrderStates.Completed]
+>;
 const completedState = {} as CompletedState;
 const completedResult = completedState.handle(OrderActions.Cancel);
 const completedIsIllegal: IllegalOutcome = completedResult;

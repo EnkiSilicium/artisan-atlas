@@ -83,6 +83,7 @@ module.exports = {
   plugins: [
     new DefinePlugin({
       'process.env.DISABLE_AUTH': JSON.stringify('true'),
+      'process.env.NODE_ENV': JSON.stringify('development'),
     }),
     // Ignore optional transports you don't use in this build
     new webpack.IgnorePlugin({

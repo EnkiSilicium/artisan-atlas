@@ -4,7 +4,6 @@ const TEST_MATCH_ALL = ['**/*.spec.ts'];
 const TEST_MATCH_ENTITIES = ['**/*.entity.spec.ts'];
 const TEST_MATCH_REPOS = ['**/*.repo.spec.ts'];
 
-
 export default {
   displayName: 'bonus-service',
   preset: '../../jest.preset',
@@ -18,12 +17,10 @@ export default {
   coverageDirectory: '../../coverage/apps/bonus-service',
   reporters: ['default', '<rootDir>/full-error-reporter.cjs'],
   testTimeout: 60000,
-    testMatch:
+  testMatch:
     ONLY === 'entities'
       ? TEST_MATCH_ENTITIES
       : ONLY === 'repos'
-      ? TEST_MATCH_REPOS
-      : TEST_MATCH_ALL,
-
-  
+        ? TEST_MATCH_REPOS
+        : TEST_MATCH_ALL,
 };

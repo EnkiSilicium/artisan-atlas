@@ -13,7 +13,7 @@ import {
   makeVipProfile,
   makeLMEvent,
 } from 'apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity.mock-factory';
-import { inRollbackedTestTx, OutboxService, requireTxManager, TypeOrmUoW } from 'persistence';
+import { inRollbackedTestTx, requireTxManager, TypeOrmUoW } from 'persistence';
 import { isoNow } from 'shared-kernel';
 import { DataSource } from 'typeorm';
 
@@ -21,6 +21,7 @@ import { VipProfileRepo } from './vip-profile.repo';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { MessageProducerPort } from 'adapter';
+import type { OutboxService } from 'persistence';
 
 const kafkaMock = {
   dispatch: jest.fn().mockResolvedValue(undefined),

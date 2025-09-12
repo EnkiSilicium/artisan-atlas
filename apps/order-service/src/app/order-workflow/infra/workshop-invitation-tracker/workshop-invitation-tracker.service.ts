@@ -40,6 +40,7 @@ export class WorkshopInvitationTracker {
     await repo.save(entity);
   }
 
+  //TODO: rewrite with UoW, add actual listener for AllInvitationsDeclinedEventV1
   async handleResponse(orderId: string, declined: boolean) {
     const repo: Repository<InvitationResponseTracker> = this.ds.getRepository(
       InvitationResponseTracker,

@@ -2,7 +2,6 @@
 import {
   CanActivate,
   ExecutionContext,
-  Inject,
   Injectable,
   Logger,
   ForbiddenException,
@@ -12,11 +11,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { assertBelongsTo } from 'apps/order-service/src/app/order-workflow/infra/auth/assertions/assert-belongs-to.assertion';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
+import {
+  ActorEntityFieldMap,
+  ActorName,
+  Principal,
+  ACTOR_NAMES_KEY,
+} from 'auth';
 import { DomainError } from 'error-handling/error-core';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { Request } from 'express';
-
-import { ActorEntityFieldMap, ActorName, Principal, ACTOR_NAMES_KEY } from 'auth';
 
 type AnyPayload = {
   principal?: Principal;
@@ -32,7 +35,7 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
   constructor(
     private readonly orderRepo: OrderRepo,
     private readonly invitationRepo: WorkshopInvitationRepo,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
   ) {
     super();
   }
@@ -54,7 +57,12 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
 
     this.logger.verbose({
       message: `Authorization request for ${ctx.getClass().name}#${ctx.getHandler().name} from ${user?.actorName} id=${user?.id}`,
-      meta: { path: req.url, method: req.method, actorId: user?.id, actorName: user?.actorName },
+      meta: {
+        path: req.url,
+        method: req.method,
+        actorId: user?.id,
+        actorName: user?.actorName,
+      },
     });
 
     try {
@@ -117,15 +125,24 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
           if (!workshopId) {
             throw new DomainError({
               errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,
-              details: { description: 'Missing workshopId for workshop principal' },
+              details: {
+                description: 'Missing workshopId for workshop principal',
+              },
             });
           }
 
-          const invitation = await this.invitationRepo.findById(orderId, workshopId);
+          const invitation = await this.invitationRepo.findById(
+            orderId,
+            workshopId,
+          );
           if (!invitation) {
             throw new DomainError({
               errorObject: OrderDomainErrorRegistry.byCode.FORBIDDEN,
-              details: { description: 'Invitation not found or forbidden', orderId, workshopId },
+              details: {
+                description: 'Invitation not found or forbidden',
+                orderId,
+                workshopId,
+              },
             });
           }
 
@@ -146,7 +163,10 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
       // Merge all domain-layer denials into one HTTP 403
       if (err instanceof DomainError) {
         const payload = this.toForbiddenResponse(err, ctx);
-        this.logger.warn({ message: 'Forbidden by domain policy', meta: payload });
+        this.logger.warn({
+          message: 'Forbidden by domain policy',
+          meta: payload,
+        });
         throw new ForbiddenException(payload);
       }
       // Non-domain errors bubble (programmer/infra/etc.)
@@ -154,7 +174,11 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
     }
   }
 
-  private verifySelfClaims(principal: Principal, payload: AnyPayload, req: Request): void {
+  private verifySelfClaims(
+    principal: Principal,
+    payload: AnyPayload,
+    req: Request,
+  ): void {
     const field = ActorEntityFieldMap[principal.actorName];
     if (!field) {
       this.logger.warn({
@@ -168,7 +192,12 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
     if (!claimed) {
       this.logger.warn({
         message: `Payload missing self-claim field '${String(field)}'; skipping self-claim verification`,
-        meta: { field: String(field), actorName: principal.actorName, path: req.url, method: req.method },
+        meta: {
+          field: String(field),
+          actorName: principal.actorName,
+          path: req.url,
+          method: req.method,
+        },
       });
       return;
     }
@@ -186,14 +215,13 @@ export class OrderHttpJwtGuard extends AuthGuard('jwt') implements CanActivate {
   }
 
   private toForbiddenResponse(err: DomainError, ctx: ExecutionContext) {
-    // Shape the HTTP body to keep your structured pipeline happy
     const handler = ctx.getHandler()?.name;
     const controller = ctx.getClass()?.name;
-    const { errorObject, message, details, kind, code, retryable, httpStatus, v } = (err as any) ?? {};
+    const { cause, message, details, kind, code, retryable, v } = err ?? {};
     return {
       kind: kind ?? 'DOMAIN',
-      code: code ?? errorObject?.code ?? 'FORBIDDEN',
-      message: message ?? errorObject?.message ?? 'Forbidden',
+      code: code ?? cause?.code ?? 'FORBIDDEN',
+      message: message ?? cause?.message ?? 'Forbidden',
       details: details ?? {},
       where: { controller, handler },
       retryable: Boolean(retryable ?? false),

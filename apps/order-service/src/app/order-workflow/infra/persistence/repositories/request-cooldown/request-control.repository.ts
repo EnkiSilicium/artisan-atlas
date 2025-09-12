@@ -7,8 +7,13 @@ export class RequestControlRepository {
   constructor(@Inject(REDIS) private readonly redis: RedisClient) {}
 
   async tryAcquire(key: string, ttlSeconds: number): Promise<boolean> {
-    
-    const res: 'OK' | null = await this.redis.set(key, '1', 'EX', ttlSeconds, 'NX');;
+    const res: 'OK' | null = await this.redis.set(
+      key,
+      '1',
+      'EX',
+      ttlSeconds,
+      'NX',
+    );
     return res === 'OK';
   }
 
@@ -26,11 +31,10 @@ export class InMemoryRequestControlRepository {
   /** key -> timer handle, to clear/reset on refresh */
   private readonly timers = new Map<string, NodeJS.Timeout>();
 
-
   constructor() {}
 
   async tryAcquire(key: string, ttlSeconds: number): Promise<boolean> {
-    const now =  Date.now();
+    const now = Date.now();
     const currentExpire = this.store.get(key);
 
     if (currentExpire && currentExpire > now) {
@@ -52,15 +56,14 @@ export class InMemoryRequestControlRepository {
 
     this.timers.set(key, t);
 
-    return true; 
+    return true;
   }
 
   async ttlMs(key: string): Promise<number | null> {
-    const now =  Date.now();
+    const now = Date.now();
     const expiresAt = this.store.get(key);
 
     if (!expiresAt || expiresAt <= now) {
-
       const prev = this.timers.get(key);
       if (prev) {
         clearTimeout(prev);

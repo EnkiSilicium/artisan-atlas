@@ -18,12 +18,13 @@ import { RequestRepo } from 'apps/order-service/src/app/order-workflow/infra/per
 import { StagesAggregateRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/stage/stage.repo';
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
 import { InfraError } from 'error-handling/error-core';
-import { TypeOrmUoW, requireTxManager, inRollbackedTestTx, OutboxService } from 'persistence';
+import { TypeOrmUoW, requireTxManager, inRollbackedTestTx } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { MessageProducerPort } from 'adapter';
+import type { OutboxService } from 'persistence';
 
 describe('StagesAggregateRepo (integration)', () => {
   let moduleRef: TestingModule;

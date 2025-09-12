@@ -172,7 +172,7 @@ export class Order implements EntityTechnicalsInterface {
     });
   }
 
-  cancelOrder() {
+  cancelOrder(): OrderStates.Cancelled | OrderStates.CancelDisputeOpened {
     const action = OrderActions.Cancel;
 
     // Only these non-terminal states can accept Cancel.
@@ -184,13 +184,14 @@ export class Order implements EntityTechnicalsInterface {
 
     this.assertCurrentStateIsOneOf(allowed, this.state, action);
 
+    let nextState: Cancelled | CancelDisputeOpened;
     switch (this.state.stateName) {
       case OrderStates.PendingWorkshopInvitations: {
         const outcome: Outcome<
           OrderStates.PendingWorkshopInvitations,
           OrderActions.Cancel
         > = this.state.handle(action);
-        const nextState: Cancelled = new outcome.nextState();
+        nextState = new outcome.nextState();
         this.state = nextState;
         break;
       }
@@ -200,7 +201,7 @@ export class Order implements EntityTechnicalsInterface {
           OrderStates.PendingCompletion | OrderStates.MarkedAsCompleted,
           OrderActions.Cancel
         > = this.state.handle(action);
-        const nextState: CancelDisputeOpened = new outcome.nextState();
+        nextState = new outcome.nextState();
         this.state = nextState;
         break;
       }
@@ -215,6 +216,7 @@ export class Order implements EntityTechnicalsInterface {
         commissionerId: this.commissionerId,
       },
     });
+    return nextState.stateName
   }
   /**
    * Asserts that the current state equals `assumed`. Narrows `state` on success.

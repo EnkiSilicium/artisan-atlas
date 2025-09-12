@@ -1,0 +1,20 @@
+# --- stage: fetch swagger assets (builder only) ---
+FROM node:20-alpine AS swagger-assets
+WORKDIR /deps
+RUN npm -s init -y && npm i -s swagger-ui-dist@5
+
+# --- stage: runtime (distroless, nonroot) ---
+# Uses Node as entrypoint; no shell, no package manager
+FROM gcr.io/distroless/nodejs20-debian12:nonroot
+
+# App runs as nonroot by default in :nonroot images
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy ONLY what you need
+COPY --from=swagger-assets /deps/node_modules/swagger-ui-dist/ /app/public/swagger/
+COPY apps/bonus-service/dist-bundle/ ./bundle/
+
+# Distroless node images have ENTRYPOINT = node
+# You only need to provide the script as CMD
+CMD ["bundle/main.js"]

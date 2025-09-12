@@ -15,11 +15,11 @@ import { RequestRepo } from 'apps/order-service/src/app/order-workflow/infra/per
 import { WorkshopInvitationRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/workshop-invitation/workshop-invitation.repo';
 import { InfraError } from 'error-handling/error-core';
 import { TypeOrmUoW, inRollbackedTestTx } from 'persistence';
+import { OutboxService } from 'persistence';
 import { DataSource } from 'typeorm';
 
 import type { TestingModule } from '@nestjs/testing';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { OutboxService } from 'persistence';
 
 describe('WorkshopInvitationRepo (integration)', () => {
   let moduleRef: TestingModule;

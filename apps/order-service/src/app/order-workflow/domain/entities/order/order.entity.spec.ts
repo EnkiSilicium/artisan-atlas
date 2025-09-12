@@ -1,5 +1,8 @@
 // Adjust the import to your file location
 
+import { randomUUID } from 'crypto';
+
+import { Order } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity';
 import { makeOrder } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity.mock-factory';
 import {
   OrderStates,
@@ -15,13 +18,10 @@ import {
   StateRegistry,
 } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.state';
 
-import { Order } from 'apps/order-service/src/app/order-workflow/domain/entities/order/order.entity';
-import { randomUUID } from 'crypto';
-
 const T0 = '2025-01-01T00:00:00.000Z';
 
 function makeOrderIn(initial: OrderStates): Order {
-  const map = StateRegistry
+  const map = StateRegistry;
   return makeOrder({
     orderId: '11111111-1111-4111-8111-111111111111',
     commissionerId: '22222222-1111-4111-8111-111111111111',
@@ -33,7 +33,6 @@ function makeOrderIn(initial: OrderStates): Order {
 }
 
 describe('Order state machine', () => {
-
   describe('Order constructor', () => {
     it('initializes with defaults', () => {
       const commissionerId = randomUUID();
