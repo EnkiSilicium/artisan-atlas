@@ -76,11 +76,11 @@ export function printEnvs(serviceLabel: string, extras: Extra[] = []): void {
     value: normalizeValue(process.env.PG_USER),
     description: 'Postgres user',
   });
-  rows.push({
-    name: 'PG_PASSWORD',
-    value: normalizeValue(process.env.PG_PASSWORD),
-    description: 'Postgres password',
-  });
+  // rows.push({
+  //   name: 'PG_PASSWORD',
+  //   value: normalizeValue(process.env.PG_PASSWORD),
+  //   description: 'Postgres password',
+  // });
   rows.push({
     name: 'PG_DB',
     value: normalizeValue(process.env.PG_DB),
@@ -163,16 +163,16 @@ export function printEnvs(serviceLabel: string, extras: Extra[] = []): void {
     value: normalizeValue(process.env.KAFKA_AUTH_ROLEID),
     description: 'Kafka role id (if AWS mode)',
   });
-  rows.push({
-    name: 'KAFKA_AUTH_ACCESSKEYID',
-    value: normalizeValue(process.env.KAFKA_AUTH_ACCESSKEYID),
-    description: 'Kafka access key id (if AWS mode)',
-  });
-  rows.push({
-    name: 'KAFKA_AUTH_SECRETACCESSKEY',
-    value: normalizeValue(process.env.KAFKA_AUTH_SECRETACCESSKEY),
-    description: 'Kafka secret access key (if AWS mode)',
-  });
+  // rows.push({
+  //   name: 'KAFKA_AUTH_ACCESSKEYID',
+  //   value: normalizeValue(process.env.KAFKA_AUTH_ACCESSKEYID),
+  //   description: 'Kafka access key id (if AWS mode)',
+  // });
+  // rows.push({
+  //   name: 'KAFKA_AUTH_SECRETACCESSKEY',
+  //   value: normalizeValue(process.env.KAFKA_AUTH_SECRETACCESSKEY),
+  //   description: 'Kafka secret access key (if AWS mode)',
+  // });
 
   // Messaging
   rows.push({
