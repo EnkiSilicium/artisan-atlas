@@ -27,7 +27,7 @@ import { OrderCancelDtoV1 } from 'contracts';
 @ApiBearerAuth('JWT')
 @Controller({ path: 'order/cancel', version: '1' })
 export class OrderCancelController {
-  constructor(private readonly orderCancelService: OrderCancelService) {}
+  constructor(private readonly orderCancelService: OrderCancelService) { }
 
   @Post()
   @ActorNames(ActorName.Commissioner)
@@ -44,6 +44,9 @@ export class OrderCancelController {
   @ApiNotFoundResponse({ description: 'Order not found (NOT_FOUND)' })
   @ApiConflictResponse({
     description: 'Illegal state transition (ILLEGAL_TRANSITION)',
+  })
+  @ApiCreatedResponse({
+    description: 'Order was cancelled',
   })
   async postOrderCancel(@Body() body: OrderCancelDtoV1) {
     return await this.orderCancelService.orderCancel({
