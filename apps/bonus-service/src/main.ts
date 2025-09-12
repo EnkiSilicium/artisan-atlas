@@ -46,7 +46,7 @@ async function startBonusProcessorApp() {
   const app = await NestFactory.create(BonusProcessorModule, {
     bufferLogs: true,
   });
-  //app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.enableShutdownHooks();
   app.setGlobalPrefix(process.env.HTTP_PREFIX ?? ApiPaths.Root);
   const useRedisMq = extractBoolEnv(process.env.USE_REDIS_MQ);
