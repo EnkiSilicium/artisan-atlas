@@ -11,12 +11,13 @@ Implemented services:
 
 
 ## Technical TL;DR
-- **Atomicity boundary:** UnitOfWork + transactional outbox; events publish **after** commit ([UoW code](libs/persistence/src/lib/unit-of-work/typeorm.uow.ts)).  
+- **Atomicity boundary:** UnitOfWork + transactional outbox; events publish **after** commit ([UoW: transaction+outbox code](libs/persistence/src/lib/unit-of-work/typeorm.uow.ts)).  
 - **Concurrency:** optimistic via `version`; losing attempts don’t leak side effects. ([update code](libs/persistence/src/lib/write-commands/update-optimistic.write-command.ts)).
 - **Events:** global `eventId` is PK/dedupe; one system event -> one user. Producers fan out for multi-recipient effects.  
-- **Kafka keys:** Order-service by `orderId`; Bonus-service by `commissionerId`. One partition per workflow.  
-- **Time:** UTC at boundaries (ISO/epoch); Postgres `timestamptz`. SLIs are skew-aware.  
+- **Kafka keys:** Order-service by `orderId`; Bonus-service by `commissionerId`. One partition per workflow.
+- **Libs organization**: grouped by rate of change and area of concern (non-publishable for now); infrastructure requiring uniformity ([observability](libs/observability/src/lib/), [transaction logic](libs/persistence/src/lib/)...), [pure helper functions](libs/shared-kernel/src/lib/domain/) and versioned [contracts](libs/contracts/src/).
 - **Failure posture:** user commands succeed without Kafka/Redis; outbox drains on recovery; DLQ per topic (processor planned).  
+- **Time:** UTC at boundaries (ISO/epoch); Postgres `timestamptz`. SLIs are skew-aware. 
 - **Read model:** interim/demo; long-term CQRS with owner HTTP as source of truth.  
 
 ---
@@ -63,19 +64,12 @@ Implemented services:
 
 # Layout 
 
- **DDD + hexagonal (ports and adapters)** aspects. Shared libs organize technical layers in an onion-like way; services group artifacts (interfaces, helpers, assertions…) around first-class citizens at each layer (aggregates/entities in domain, application services in application); ~70% of infra lives in **shared libs** for reuse. Services keep **repositories**, adaptations of shared infra, and service-specific bits.
+ **DDD + hexagonal (ports and adapters)** aspects ([adapter example](apps/order-service/src/app/order-workflow/adapters/inbound/http/stage-completion.controller.ts)). Shared libs organize technical layers in an onion-like way; services group artifacts (interfaces, helpers, assertions…) around first-class citizens at each layer (aggregates/entities in domain, application services in application); ~70% of infra (and some other low-rate-of-change code) lives in **shared libs** for reuse. Services keep **repositories** ([repo example](apps/order-service/src/app/order-workflow/infra/persistence/repositories/stage/stage.repo.ts)), adaptations of shared infra, and service-specific bits.
  For more information on layout/library decisions refer to [ADR: soon]
 
 ---
 
-# Time & timestamp policy
-
-- All boundaries use **UTC** in **ISO 8601** or **epoch**; Postgres persists **`timestamptz`**.  
-- TypeORM `Date` is acceptable **inside** a service but **must never leave** the boundary; normalize to UTC ISO/epoch on I/O.  
-
----
-
-## Areas of concern -> services
+# Areas of concern -> services
 
 ###  Application logic
 
@@ -95,10 +89,10 @@ Implemented services:
 - Aggregates:
   - [**AdditiveBonus**](apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/additive-bonus/additive-bonus.entity.ts) stores `totalPoints` and derives **grade** via thresholds.
   - [**VipProfile**](apps/bonus-service/src/app/modules/bonus-processor/domain/aggregates/vip-profile/vip-profile.entity.ts) maintains a last-30-days window and computes **`isVIP`** as points ≥ threshold.  
-- Policy lives **in code** (eligible events, point weights, thresholds); changes require redeploy. The domain exposes **recompute** for backfills.  
+- Policy lives **in code** (eligible events, point weights, thresholds); changes require redeploy. The domain exposes **recompute** for backfills (as aggregate methods).  
 - **Identity & dedupe:** a **single system event benefits one user**. The **global `eventId`** is the primary/dedupe key. For multi-recipient effects, producers **fan out** separate events with distinct IDs.
 
----
+---  
 
 ###  Data
 
@@ -146,6 +140,12 @@ Bonus service
 
 ---
 
+# Time & timestamp policy
+
+- All boundaries use **UTC** in **ISO 8601** or **epoch**; Postgres persists **`timestamptz`**.  
+- TypeORM `Date` is acceptable **inside** a service but **must never leave** the boundary; normalize to UTC ISO/epoch on I/O.  
+
+---
 ## Operational posture, constraints, and SLOs (implemented; thresholds illustrative)
 
 > Exact thresholds are set with stakeholders. Values below are **examples**, not promises.
@@ -154,7 +154,6 @@ Bonus service
 - **Handler characteristics.** Order-service handlers do per-aggregate DB work and return; no long-running side work in request paths.  
 - **Concurrency & retries.** Optimistic concurrency is preferred. UoW performs **one** in-place retry for retriable DB errors; otherwise HTTP returns precise errors and message paths rely on redelivery.  
 - **Producers & batching.** Producers are **not batched** today; batching may be added if operationally justified, noting it can increase p95 tails.
-
 
 ---
 
@@ -167,3 +166,6 @@ Bonus service
 - **Policy in code:** the bonus policy (eligible actions, point weights, thresholds) is versioned as **`policyVersion`**.
 - **Persisted version:** aggregates persist the version their data was computed with.
 - **Change process:** deploy with a new **`policyVersion`**, then run aggregate-owned "**recompute**" to re-derive `additive_bonus` and `vip_profile` from historical `bonus_event` records under the new rules. On version conflict currently sends to DLQ, but in future may be configured to ingest but schedule recompute.
+
+---
+---
