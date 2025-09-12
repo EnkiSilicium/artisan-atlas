@@ -17,7 +17,7 @@ import {
   ApiConflictResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.service';
+import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-response.service';
 import {
   AcceptWorkshopInvitationDtoV1,
   DeclineWorkshopInvitationDtoV1,

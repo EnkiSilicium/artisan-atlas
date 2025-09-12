@@ -21,8 +21,8 @@ import { OrderComfirmCompletionService } from 'apps/order-service/src/app/order-
 import { OrderInitService } from 'apps/order-service/src/app/order-workflow/application/services/order/order-init.service';
 import { RequestEditService } from 'apps/order-service/src/app/order-workflow/application/services/request/request-edit.service';
 import { StageCompletionService } from 'apps/order-service/src/app/order-workflow/application/services/stage/stage-completion.service';
-import { WorkshopInvitationEditService } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-edit.service';
-import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/workshop/workshop-invitation-response.service';
+import { WorkshopInvitationEditService } from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-edit.service';
+import { WorkshopInvitationResponseService } from 'apps/order-service/src/app/order-workflow/application/services/invitation/workshop-invitation-response.service';
 import { MockAuthGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/mock-auth.guard';
 import { OrderHttpJwtGuard } from 'apps/order-service/src/app/order-workflow/infra/auth/guards/order-http-jwt.guard';
 import { JwtStrategy } from 'apps/order-service/src/app/order-workflow/infra/auth/strategies/jwt.strategy';
