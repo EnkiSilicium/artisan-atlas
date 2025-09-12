@@ -18,8 +18,8 @@ import { redisConfig } from 'apps/order-service/src/app/order-workflow/infra/con
 import {
   HttpErrorInterceptor,
   HttpErrorInterceptorOptions,
-  KafkaErrorInterceptor,
-  KafkaErrorInterceptorOptions,
+  KafkaErrorDlqInterceptor,
+  KafkaErrorDlqInterceptorOptions,
 } from 'error-handling/interceptor';
 import { WinstonModule } from 'nest-winston';
 import { OpenTelemetryModule } from 'nestjs-otel';
@@ -114,9 +114,9 @@ import { extractBoolEnv } from 'shared-kernel';
 
 
 
-    KafkaErrorInterceptor,
+    KafkaErrorDlqInterceptor,
     {
-      provide: KafkaErrorInterceptorOptions,
+      provide: KafkaErrorDlqInterceptorOptions,
       useValue: {
         maxRetries: 5,
       },

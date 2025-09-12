@@ -10,7 +10,7 @@ import { OrderReadModule } from 'apps/order-service/src/app/read-model/infra/di/
 import { ApiPaths } from 'contracts';
 import {
   HttpErrorInterceptor,
-  KafkaErrorInterceptor,
+  KafkaErrorDlqInterceptor,
 } from 'error-handling/interceptor';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { LoggingInterceptor, printEnvs } from 'observability';
@@ -54,7 +54,7 @@ async function startOrderWorkflowApp() {
   app.setGlobalPrefix(process.env.HTTP_PREFIX ?? ApiPaths.Root);
   const useRedisMq = extractBoolEnv(process.env.USE_REDIS_MQ);
   app.useGlobalInterceptors(
-    ...(useRedisMq ? [] : [app.get(KafkaErrorInterceptor)]),
+    ...(useRedisMq ? [] : [app.get(KafkaErrorDlqInterceptor)]),
     app.get(HttpErrorInterceptor),
     app.get(LoggingInterceptor),
   );
@@ -74,7 +74,7 @@ async function startOrderWorkflowApp() {
     app.connectMicroservice<MicroserviceOptions>(microserviceOptions);
   if (!useRedisMq) {
     microservice.useGlobalInterceptors(
-      app.get(KafkaErrorInterceptor),
+      app.get(KafkaErrorDlqInterceptor),
       app.get(LoggingInterceptor),
     );
   } else {

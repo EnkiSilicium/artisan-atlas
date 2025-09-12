@@ -40,8 +40,8 @@ import { AUTH_GUARD } from 'auth';
 import {
   HttpErrorInterceptor,
   HttpErrorInterceptorOptions,
-  KafkaErrorInterceptor,
-  KafkaErrorInterceptorOptions,
+  KafkaErrorDlqInterceptor,
+  KafkaErrorDlqInterceptorOptions,
 } from 'error-handling/interceptor';
 import { WinstonModule } from 'nest-winston';
 import { OpenTelemetryModule } from 'nestjs-otel';
@@ -146,9 +146,9 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
     OutboxService,
     TypeOrmUoW,
 
-    KafkaErrorInterceptor,
+    KafkaErrorDlqInterceptor,
     {
-      provide: KafkaErrorInterceptorOptions,
+      provide: KafkaErrorDlqInterceptorOptions,
       useValue: {
         maxRetries: 5,
       },
@@ -176,7 +176,7 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
     HttpErrorInterceptor,
     ...(extractBoolEnv(process.env.USE_REDIS_MQ)
       ? []
-      : [KafkaErrorInterceptor]),
+      : [KafkaErrorDlqInterceptor]),
 
     ...(extractBoolEnv(process.env.DISABLE_AUTH) ? [] : [JwtStrategy]),
     //JwtStrategy,
@@ -201,7 +201,7 @@ import { requestCooldownConfig } from '../config/request-cooldown.config';
       ? []
       : [
         {
-          provide: KafkaErrorInterceptorOptions,
+          provide: KafkaErrorDlqInterceptorOptions,
           useValue: {
             maxRetries: 5,
           },

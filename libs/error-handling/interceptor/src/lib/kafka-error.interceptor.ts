@@ -28,7 +28,7 @@ import {
   concatMap,
 } from 'rxjs/operators';
 
-export class KafkaErrorInterceptorOptions {
+export class KafkaErrorDlqInterceptorOptions {
   maxRetries!: number; // e.g. 5
   dlqSuffix?: string; // default ".DLQ"
   attemptsHeader?: string; // default "x-attempts"
@@ -46,7 +46,7 @@ export class KafkaErrorInterceptorOptions {
  * - DLQ payload contains the original message plus a compact error summary. Unknown errors are labeled as "unknown".
  */
 @Injectable()
-export class KafkaErrorInterceptor implements NestInterceptor {
+export class KafkaErrorDlqInterceptor implements NestInterceptor {
   @Inject(MQ_PRODUCER)
   private readonly dlqProducer!: ClientKafka;
 
@@ -54,14 +54,14 @@ export class KafkaErrorInterceptor implements NestInterceptor {
   private readonly attemptsHeader: string;
 
   constructor(
-    private readonly opts: KafkaErrorInterceptorOptions = { maxRetries: 5 },
+    private readonly opts: KafkaErrorDlqInterceptorOptions = { maxRetries: 5 },
   ) {
     this.dlqSuffix = opts.dlqSuffix ?? '.DLQ';
     this.attemptsHeader = opts.attemptsHeader ?? 'x-attempts';
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    Logger.debug({ message: `${KafkaErrorInterceptor.name} active` });
+    Logger.debug({ message: `${KafkaErrorDlqInterceptor.name} active` });
     // Only handle Kafka (RPC) traffic; let HTTP go through the HTTP pipeline.
     if (context.getType() !== 'rpc') return next.handle();
 
@@ -71,7 +71,7 @@ export class KafkaErrorInterceptor implements NestInterceptor {
 
     if(typeof kafkaCtx.getTopic !== "function") {
       Logger.warn({
-        message: `Context is not a kafka context - ${KafkaErrorInterceptor.name} disabled`
+        message: `Context is not a kafka context - ${KafkaErrorDlqInterceptor.name} disabled`
       })
       return next.handle().pipe()
     }
@@ -98,9 +98,9 @@ export class KafkaErrorInterceptor implements NestInterceptor {
         Logger.error(
           { ...(error as any) },
           undefined,
-          KafkaErrorInterceptor.name,
+          KafkaErrorDlqInterceptor.name,
         );
-        Logger.debug({ message: 'KafkaErrorInterceptor handling' });
+        Logger.debug({ message: 'KafkaErrorDlqInterceptor handling' });
 
         const attempts = this.getAttempts(message);
         const max = this.opts.maxRetries ?? 5;
@@ -129,7 +129,7 @@ export class KafkaErrorInterceptor implements NestInterceptor {
                 Logger.error(
                   { commitErr },
                   undefined,
-                  'KafkaErrorInterceptor.Commit',
+                  'KafkaErrorDlqInterceptor.Commit',
                 );
                 return throwError(() => error);
               }),
@@ -137,7 +137,7 @@ export class KafkaErrorInterceptor implements NestInterceptor {
           ),
           map(() => undefined as void),
           catchError((dlqErr) => {
-            Logger.error({ dlqErr }, undefined, 'KafkaErrorInterceptor.DLQ');
+            Logger.error({ dlqErr }, undefined, 'KafkaErrorDlqInterceptor.DLQ');
             return throwError(() => error); // DLQ failed → keep uncommitted
           }),
         );

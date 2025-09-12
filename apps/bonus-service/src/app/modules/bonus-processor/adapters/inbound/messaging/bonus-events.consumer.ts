@@ -15,20 +15,20 @@ import { assertIsObject, isoNow } from 'shared-kernel';
 import { assertsCanBeBonusEvent } from '../assertions/asserts-can-be-bonus-event.assertion';
 
 import type { BaseEvent } from 'contracts';
-import { KafkaErrorInterceptor } from 'error-handling/interceptor';
+import { KafkaErrorDlqInterceptor } from 'error-handling/interceptor';
 
 @Controller()
 export class BonusEventsConsumer {
   constructor(private readonly bonusService: BonusEventService) {}
 
-  @UseInterceptors(LoggingInterceptor, KafkaErrorInterceptor)
+  @UseInterceptors(LoggingInterceptor, KafkaErrorDlqInterceptor)
   @EventPattern(KafkaTopics.OrderTransitions)
   @UsePipes(new ValidationPipe(validator))
   async onOrderTransitions(@Payload() payload: BaseEvent<string>) {
     await this.route({ ...payload });
   }
 
-  @UseInterceptors(LoggingInterceptor, KafkaErrorInterceptor)
+  @UseInterceptors(LoggingInterceptor, KafkaErrorDlqInterceptor)
   @EventPattern(KafkaTopics.StageTransitions)
   @UsePipes(new ValidationPipe(validator))
   async onStageTransitions(@Payload() payload: BaseEvent<string>) {
