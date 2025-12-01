@@ -139,16 +139,17 @@ Bonus service
 - **Core derivatives of those above**: rates of change computed in dashboard directly.
 
 ---
+# Versioning and coordination policies
 
-# Time & timestamp policy
+## Time & timestamp policy
 
 - All boundaries use **UTC** in **ISO 8601** or **epoch**; Postgres persists **`timestamptz`**.  
 - TypeORM `Date` is acceptable **inside** a service but **must never leave** the boundary; normalize to UTC ISO/epoch on I/O.  
 
 ---
-## Operational posture, constraints, and SLOs (implemented; thresholds illustrative)
+## Operational posture, constraints, and SLOs.
 
-> Exact thresholds are set with stakeholders. Values below are **examples**, not promises.
+> Exact thresholds are set with stakeholders.
 
 - **Data integrity.** Core invariants enforced in code and by Postgres constraints. 
 - **Handler characteristics.** Order-service handlers do per-aggregate DB work and return; no long-running side work in request paths.  
@@ -166,6 +167,9 @@ Bonus service
 - **Policy in code:** the bonus policy (eligible actions, point weights, thresholds) is versioned as **`policyVersion`**.
 - **Persisted version:** aggregates persist the version their data was computed with.
 - **Change process:** deploy with a new **`policyVersion`**, then run aggregate-owned "**recompute**" to re-derive `additive_bonus` and `vip_profile` from historical `bonus_event` records under the new rules. On version conflict currently sends to DLQ, but in future may be configured to ingest but schedule recompute.
+
+---
+---
 
 ---
 ---
