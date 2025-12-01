@@ -17,7 +17,7 @@ import { AppError } from 'error-handling/error-core';
 // Your error base + concrete types
 import { DomainError } from 'error-handling/error-core';
 import { InfraError } from 'error-handling/error-core';
-import { ProgrammerError } from 'error-handling/error-core';
+import { Panic } from 'error-handling/error-core';
 import { Observable, from, throwError, firstValueFrom } from 'rxjs';
 import {
   catchError,
@@ -107,7 +107,7 @@ export class KafkaErrorDlqInterceptor implements NestInterceptor {
         const isOurError =
           error instanceof DomainError ||
           error instanceof InfraError ||
-          error instanceof ProgrammerError;
+          error instanceof Panic;
 
         const appErr: AppError | undefined = isOurError
           ? (error as AppError)

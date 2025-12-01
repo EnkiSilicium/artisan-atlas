@@ -19,13 +19,12 @@ import { assertIsObject } from 'shared-kernel';
 @Injectable()
 export class OrderEventDispatcher
   implements
-    MessageProducerPort<OrderEventInstanceUnion>,
-    OnModuleInit,
-    OnModuleDestroy
-{
+  MessageProducerPort<OrderEventInstanceUnion>,
+  OnModuleInit,
+  OnModuleDestroy {
   private readonly logger = new Logger(OrderEventDispatcher.name);
 
-  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientKafka) {}
+  constructor(@Inject(MQ_PRODUCER) private readonly client: ClientKafka) { }
 
   async onModuleInit() {
     // ClientKafka needs an explicit connect in app code (Nest won't auto-connect producers)

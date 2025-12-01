@@ -9,8 +9,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { OrderServiceTopicMap } from 'apps/order-service/src/app/order-workflow/adapters/outbound/messaging/kafka.topic-map';
 import { OrderEventInstanceUnion } from 'contracts';
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 import { lastValueFrom } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
 
@@ -59,8 +59,8 @@ export class OrderEventRedisDispatcher
     const topic = OrderServiceTopicMap[evt.eventName];
     if (!topic) {
       const known = Object.keys(OrderServiceTopicMap).join(', ');
-      throw new ProgrammerError({
-        errorObject: ProgrammerErrorRegistry.byCode.BUG,
+      throw new Panic({
+        errorObject: PanicRegistry.byCode.BUG,
         details: {
           message: `No topic mapping for eventName="${evt.eventName}". Known: [${known}]`,
           event: { ...evt },

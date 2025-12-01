@@ -1,6 +1,6 @@
-import { ProgrammerError, InfraError } from 'error-handling/error-core';
+import { Panic, InfraError } from 'error-handling/error-core';
 import {
-  ProgrammerErrorRegistry,
+  PanicRegistry,
   InfraErrorRegistry,
 } from 'error-handling/registries/common';
 import { assertImplementsEntityTechnicals } from 'libs/persistence/src/lib/assertions/assert-implements-entity-technicals.assertion';
@@ -55,8 +55,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
     return c['propertyName'] as string;
   });
   if (pkProps.length === 0) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: { description: `entity ${meta.name} has no primary key` },
     });
   }
@@ -73,8 +73,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
 
   // Validate pkWhere completeness and values
   if (!pkWhere || typeof pkWhere !== 'object' || Array.isArray(pkWhere)) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: {
         description: `'pkWhere' must be an object with all PKs`,
       },
@@ -83,8 +83,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
   for (const pk of pkProps) {
     const v = pkWhere[pk];
     if (v === undefined || v === null) {
-      throw new ProgrammerError({
-        errorObject: ProgrammerErrorRegistry.byCode.BUG,
+      throw new Panic({
+        errorObject: PanicRegistry.byCode.BUG,
         details: {
           description: `missing PK field '${pk}' in pkWhere/entity for ${meta.name}`,
         },
@@ -95,8 +95,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
   // Prepare SET payload
   assertIsObject(input.set);
   if (Array.isArray(input.set)) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: { description: `'set' must be a non-array object` },
     });
   }
@@ -107,8 +107,8 @@ export async function updateWithVersionGuard<T extends object>(input: {
   // Forbid PK updates
   for (const pk of pkProps) {
     if (pk in setInput) {
-      throw new ProgrammerError({
-        errorObject: ProgrammerErrorRegistry.byCode.BUG,
+      throw new Panic({
+        errorObject: PanicRegistry.byCode.BUG,
         details: {
           description: `attempt to update primary key property '${pk}'`,
         },

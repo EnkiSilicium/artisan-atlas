@@ -1,5 +1,5 @@
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 
 interface AssertTopicMappingDefinedParams {
   topic: unknown;
@@ -14,8 +14,8 @@ export function assertTopicMappingDefined({
 }: AssertTopicMappingDefinedParams): void {
   if (!topic) {
     const knownList = known.join(', ');
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: {
         message: `No topic mapping for eventName="${eventName}". Known: [${knownList}]`,
       },

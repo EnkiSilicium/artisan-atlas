@@ -12,7 +12,7 @@ import {
   AppError,
   DomainError,
   InfraError,
-  ProgrammerError,
+  Panic,
 } from 'error-handling/error-core';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -53,7 +53,7 @@ export class HttpErrorInterceptor implements NestInterceptor {
         const isAppError =
           err instanceof DomainError ||
           err instanceof InfraError ||
-          err instanceof ProgrammerError;
+          err instanceof Panic;
 
         // Unknown → 500 generic body
         if (!isAppError) {
