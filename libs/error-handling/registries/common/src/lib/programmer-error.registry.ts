@@ -2,7 +2,7 @@
 
 import { makeRegistry } from 'error-handling/error-core';
 
-export const ProgrammerErrorDefs = [
+export const PanicDefs = [
   {
     code: 'BUG',
     message: 'Internal invariant violated',
@@ -13,8 +13,8 @@ export const ProgrammerErrorDefs = [
   },
 ] as const;
 
-export const ProgrammerErrorRegistry = makeRegistry(
+export const PanicRegistry = makeRegistry(
   'PROGRAMMER',
-  ProgrammerErrorDefs,
+  PanicDefs,
 );
-export const ProgrammerErrorCodes = ProgrammerErrorRegistry.codes;
+export const PanicCodes = PanicRegistry.codes;

@@ -1,7 +1,7 @@
 // infra/typeorm/pg-infra-remapper.ts
 import * as PG from '@drdgvhbh/postgres-error-codes';
 import { InfraError } from 'error-handling/error-core';
-import { ProgrammerError } from 'error-handling/error-core';
+import { Panic } from 'error-handling/error-core';
 import { DomainError } from 'error-handling/error-core';
 import { InfraErrorRegistry } from 'error-handling/registries/common';
 import { assertIsObject } from 'shared-kernel';
@@ -32,7 +32,7 @@ export function remapTypeOrmPgErrorToInfra(
   if (error instanceof InfraError) {
     throw error;
   }
-  if (error instanceof ProgrammerError) {
+  if (error instanceof Panic) {
     throw error;
   }
 

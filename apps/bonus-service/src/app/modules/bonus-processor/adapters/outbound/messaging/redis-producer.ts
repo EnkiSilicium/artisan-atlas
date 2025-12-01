@@ -9,8 +9,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { MQ_PRODUCER, MessageProducerPort } from 'adapter';
 import { BonusServiceTopicMap } from 'apps/bonus-service/src/app/modules/bonus-processor/adapters/outbound/messaging/kafka.topic-map';
 import { BonusEventInstanceUnion } from 'contracts';
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 import { lastValueFrom } from 'rxjs';
 import { defaultIfEmpty } from 'rxjs/operators';
 
@@ -57,8 +57,8 @@ export class BonusEventRedisDispatcher
     const topic = BonusServiceTopicMap[evt.eventName];
     if (!topic) {
       const known = Object.keys(BonusServiceTopicMap).join(', ');
-      throw new ProgrammerError({
-        errorObject: ProgrammerErrorRegistry.byCode.BUG,
+      throw new Panic({
+        errorObject: PanicRegistry.byCode.BUG,
         details: {
           message: `No topic mapping for eventName="${evt.eventName}". Known: [${known}]`,
           event: { ...evt },

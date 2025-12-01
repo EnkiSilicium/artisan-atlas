@@ -1,6 +1,6 @@
 import { ActorEntityFieldMap } from 'auth';
-import { DomainError, ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { DomainError, Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 import { OrderDomainErrorRegistry } from 'error-handling/registries/order';
 import { assertIsObject } from 'shared-kernel';
 
@@ -14,8 +14,8 @@ export function assertBelongsTo(
   const entityField = ActorEntityFieldMap[actor.actorName];
 
   if (!entityField) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: {
         description: `Unknown actor name ${actor.actorName} in ${assertBelongsTo.name}`,
       },

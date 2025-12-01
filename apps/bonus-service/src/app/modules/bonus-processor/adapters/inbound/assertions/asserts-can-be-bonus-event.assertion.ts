@@ -1,5 +1,5 @@
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 
 import type { BaseEvent } from 'contracts';
 
@@ -13,15 +13,15 @@ export function assertsCanBeBonusEvent(
   const commissionerId = event['commissionerId'];
 
   if (!eventName) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: { description: `injested event does not have eventName` },
     });
   }
 
   if (!commissionerId) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: {
         description: `injested event named [${eventName as any}] does not have commissionerId`,
       },

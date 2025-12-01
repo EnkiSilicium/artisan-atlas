@@ -1,5 +1,5 @@
-import { ProgrammerError } from 'error-handling/error-core';
-import { ProgrammerErrorRegistry } from 'error-handling/registries/common';
+import { Panic } from 'error-handling/error-core';
+import { PanicRegistry } from 'error-handling/registries/common';
 
 interface AssertPositiveIntegerParams {
   value: number;
@@ -11,8 +11,8 @@ export function assertPositiveInteger({
   description,
 }: AssertPositiveIntegerParams): void {
   if (!Number.isInteger(value) || value <= 0) {
-    throw new ProgrammerError({
-      errorObject: ProgrammerErrorRegistry.byCode.BUG,
+    throw new Panic({
+      errorObject: PanicRegistry.byCode.BUG,
       details: { description },
     });
   }

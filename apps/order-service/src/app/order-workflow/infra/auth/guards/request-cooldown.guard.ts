@@ -70,9 +70,6 @@ export class RequestCooldownGuard implements CanActivate {
       res.setHeader('Retry-After', Math.ceil(ttl / 1000));
     }
 
-    const error = new DomainError({
-      errorObject: OrderDomainErrorRegistry.byCode.TOO_MANY_REQUESTS,
-    });
     throw new HttpException(`Too many requests`, HttpStatus.TOO_MANY_REQUESTS);
   }
 }

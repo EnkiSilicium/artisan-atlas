@@ -8,7 +8,7 @@ import { RequestEntity } from 'apps/order-service/src/app/order-workflow/domain/
 import { Stage } from 'apps/order-service/src/app/order-workflow/domain/entities/stage/stage.entity';
 import { WorkshopInvitation } from 'apps/order-service/src/app/order-workflow/domain/entities/workshop-invitation/workshop-invitation.entity';
 import { OrderRepo } from 'apps/order-service/src/app/order-workflow/infra/persistence/repositories/order/order.repo';
-import { InfraError, ProgrammerError } from 'error-handling/error-core';
+import { InfraError, Panic } from 'error-handling/error-core';
 import { TypeOrmUoW, inRollbackedTestTx } from 'persistence';
 import { DataSource } from 'typeorm';
 
@@ -149,7 +149,7 @@ describe('OrderRepo (integration)', () => {
   describe('guards', () => {
     it('writing outside UoW throws (requireTxManager guard)', async () => {
       const order = makeOrder({ commissionerId: randomUUID(), version: 1 });
-      await expect(repo.insert(order)).rejects.toThrow(ProgrammerError);
+      await expect(repo.insert(order)).rejects.toThrow(Panic);
     });
   });
 });
